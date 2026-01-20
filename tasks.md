@@ -11,9 +11,11 @@
 ## 🏗️ Decisões Arquiteturais
 
 ### Estratégia de Palavras Híbrida (DOCUMENTADA)
+
 **Decisão:** Implementar com duas tabelas coordenadas para otimizar armazenamento e isolamento:
 
 **Tabela 1: `words_global`** (Compartilhada entre todas as orgs)
+
 ```sql
 - id: UUID (PK)
 - word: TEXT (UNIQUE) -- "hello", "mundo", etc
@@ -25,6 +27,7 @@
 ```
 
 **Tabela 2: `words`** (Personalizações por organização)
+
 ```sql
 - id: UUID (PK)
 - word_global_id: UUID (FK para words_global) -- Vincula à palavra global
@@ -38,6 +41,7 @@
 ```
 
 **Fluxo de Fetch:**
+
 1. Usuário solicita palavra "apple"
 2. Buscar em AsyncStorage local (org-specific namespace)
 3. Se não encontrar, buscar em `words_global` + customizações em `words` WHERE organization_id
@@ -45,6 +49,7 @@
 5. Salvar base em `words_global` (UNIQUE, primeira org ganha) + customizações em `words`
 
 **Benefícios:**
+
 - ✅ Zero redundância: "hello" armazenado 1x globalmente
 - ✅ Isolamento mantido: Orgs só veem suas customizações
 - ✅ Performance: `words_global` não cresce por org, RLS rápido em `words`
@@ -181,6 +186,7 @@
 **Descrição:** Implementar helper de fetch com estratégia de cache respeitando isolamento de dados usando abordagem **híbrida de palavras**.
 
 **Estratégia Híbrida (Implementada):**
+
 - Usa `words_global` (compartilhada) + `words` (customizadas por org)
 - Evita redundância enquanto mantém isolamento
 - Primeira org cria palavra global, outras reutilizam
@@ -339,7 +345,232 @@
 
 ---
 
-## 🚀 Fase 4: Refinamento & Deploy
+## 🚀 Fase 4: Deployment & DevOps (OceanDigital)
+
+### ⬜ Task 4.1: Configurar Docker e docker-compose para OceanDigital
+
+**Descrição:** Criar containers para frontend (PWA) e backend (opcional).
+
+**Subtarefas:**
+
+- [ ] Criar `Dockerfile` para build da aplicação Expo Web
+- [ ] Configurar multi-stage build (builder → runner)
+- [ ] Criar `docker-compose.yml` com:
+  - Serviço Web (Nginx + app Expo)
+  - Volume para logs
+  - Network para comunicação interna
+- [ ] Configurar variáveis de ambiente (.env.production)
+- [ ] Testar build localmente
+- [ ] Documentar passos de build
+
+**Requisitos:** Task 3.2 concluída
+**Prioridade:** 🔴 CRÍTICA
+
+---
+
+### ⬜ Task 4.2: Setup GitHub Actions CI/CD para OceanDigital
+
+**Descrição:** Automatizar build e deploy na máquina OceanDigital via SSH.
+
+**Subtarefas:**
+
+- [ ] Criar GitHub Actions workflow (`.github/workflows/deploy.yml`)
+- [ ] Configurar secrets: SSH_PRIVATE_KEY, OCEAN_HOST, OCEAN_USER
+- [ ] Workflow steps:
+  - Checkout código
+  - Build Docker image
+  - SSH para OceanDigital
+  - Pull latest code
+  - Docker build & push (Docker Registry)
+  - Docker-compose up -d (restart containers)
+  - Health check (curl localhost)
+- [ ] Configurar trigger: push em main branch
+- [ ] Testar pipeline com fake SSH
+- [ ] Documentar variáveis de ambiente necessárias
+
+**Requisitos:** Task 4.1 concluída
+**Prioridade:** 🔴 CRÍTICA
+
+---
+
+### ⬜ Task 4.3: Configurar Nginx, SSL e service worker no OceanDigital
+
+**Descrição:** Setup completo de servidor web com HTTPS e PWA.
+
+**Subtarefas:**
+
+- [ ] Instalar Nginx na droplet OceanDigital
+- [ ] Criar nginx.conf com:
+  - Reverse proxy para localhost:3000
+  - Gzip compression (assets)
+  - Cache headers (1 year para /assets)
+  - Security headers (CSP, X-Frame-Options)
+  - Redirect HTTP → HTTPS
+- [ ] Instalar Let's Encrypt (Certbot)
+- [ ] Configurar auto-renewal de certificados (cron)
+- [ ] Criar service worker (`web/service-worker.js`)
+  - Cachear assets estáticos
+  - Cachear requests de API com timeout
+  - Offline fallback page
+- [ ] Testar PWA offline no OceanDigital
+- [ ] Monitorar uptime (status page)
+
+**Requisitos:** Task 4.2 concluída
+**Prioridade:** 🔴 CRÍTICA
+
+---
+
+### ⬜ Task 4.4: Performance e Core Web Vitals
+
+**Descrição:** Otimizar métricas de performance para MVP.
+
+**Subtarefas:**
+
+- [ ] Analisar bundle size com `expo-optimize`
+- [ ] Code splitting por rota
+- [ ] Lazy load de componentes pesados
+- [ ] Otimizar imagens (WebP + srcset)
+- [ ] Minificar e tree-shake código
+- [ ] Usar React.lazy + Suspense
+- [ ] Implementar virtual scrolling para listas
+- [ ] Testar com Lighthouse (target: 90+ em Performance)
+- [ ] Implementar Sentry para monitorar erros em produção
+- [ ] Criar monitoring dashboard (uptime, erros, performance)
+
+**Requisitos:** Tasks anteriores concluídas
+**Prioridade:** 🟠 ALTA
+
+---
+
+## 🎯 Fase 5: Refinamento & Launch
+
+### ⬜ Task 5.1: Otimizar offline-first e sincronização
+
+**Descrição:** Garantir que o app funcione completamente offline com sync automático.
+
+**Subtarefas:**
+
+- [ ] Implementar fila de mutações locais (mutation queue)
+- [ ] Detectar reconexão com internet (navigator.onLine)
+- [ ] Sincronizar automaticamente ao reconectar
+- [ ] Implementar conflito resolution (Last-Write-Wins)
+- [ ] Testar fluxo: offline → criar palavra → online → sincroniza
+- [ ] Testar fluxo: offline → registrar acerto → online → atualiza user_progress
+- [ ] Criar visual de "sincronizando..." para usuário
+- [ ] Testar com múltiplas abas abertas
+
+**Requisitos:** Tasks anteriores concluídas
+**Prioridade:** 🟠 ALTA
+
+---
+
+### ⬜ Task 5.2: Testes e refinement de UX/UI
+
+**Descrição:** Polir interface e criar suite de testes automatizados.
+
+**Subtarefas:**
+
+- [ ] Instalar Vitest para testes unitários
+- [ ] Criar testes para wordService
+- [ ] Criar testes para hooks (useOrganization, useLocalStorage)
+- [ ] Criar testes E2E com Playwright
+- [ ] Atingir 70%+ cobertura de código
+- [ ] User testing com 5-10 pessoas
+- [ ] Coletar feedback e refinar UX
+- [ ] Validar acessibilidade (WCAG 2.1 AA)
+- [ ] Configurar CI/CD para rodar testes no GitHub Actions
+
+**Requisitos:** Tasks anteriores concluídas
+**Prioridade:** 🟠 ALTA
+
+---
+
+### ⬜ Task 5.3: Launch em produção no OceanDigital
+
+**Descrição:** Deploy final e monitoramento.
+
+**Subtarefas:**
+
+- [ ] Criar documentação README completa (features, deploy, troubleshooting)
+- [ ] Documentar variáveis de ambiente necessárias
+- [ ] Criar guia de contribuição (CONTRIBUTING.md)
+- [ ] Setup analytics (Mixpanel ou Plausible)
+- [ ] Setup monitoring (Sentry para erros)
+- [ ] Criar landing page (opcional)
+- [ ] Deploy em produção via GitHub Actions
+- [ ] Testar em múltiplos navegadores e dispositivos
+- [ ] Monitorar logs em tempo real
+- [ ] Criar runbook para emergências (como rollback)
+
+**Requisitos:** Todas as fases anteriores concluídas
+**Prioridade:** 🔴 CRÍTICA
+
+---
+
+## 🚀 Fase 5: Refinamento & Deploy
+
+### ⬜ Task 5.1: Otimizar offline-first e sincronização
+
+**Descrição:** Garantir que o app funcione completamente offline com sync automático.
+
+**Subtarefas:**
+
+- [ ] Implementar fila de mutações locais (mutation queue)
+- [ ] Detectar reconexão com internet (navigator.onLine)
+- [ ] Sincronizar automaticamente ao reconectar
+- [ ] Implementar conflito resolution (Last-Write-Wins)
+- [ ] Testar fluxo: offline → criar palavra → online → sincroniza
+- [ ] Testar fluxo: offline → registrar acerto → online → atualiza user_progress
+- [ ] Criar visual de "sincronizando..." para usuário
+- [ ] Testar com múltiplas abas abertas
+
+**Requisitos:** Tasks anteriores concluídas
+**Prioridade:** 🟠 ALTA
+
+---
+
+### ⬜ Task 5.2: Testes e refinement de UX/UI
+
+**Descrição:** Polir interface e criar suite de testes automatizados.
+
+**Subtarefas:**
+
+- [ ] Instalar Vitest para testes unitários
+- [ ] Criar testes para wordService
+- [ ] Criar testes para hooks (useOrganization, useLocalStorage)
+- [ ] Criar testes E2E com Playwright
+- [ ] Atingir 70%+ cobertura de código
+- [ ] User testing com 5-10 pessoas
+- [ ] Coletar feedback e refinar UX
+- [ ] Validar acessibilidade (WCAG 2.1 AA)
+- [ ] Configurar CI/CD para rodar testes no GitHub Actions
+
+**Requisitos:** Tasks anteriores concluídas
+**Prioridade:** 🟠 ALTA
+
+---
+
+### ⬜ Task 5.3: Launch em produção no OceanDigital
+
+**Descrição:** Deploy final e monitoramento.
+
+**Subtarefas:**
+
+- [ ] Criar documentação README completa (features, deploy, troubleshooting)
+- [ ] Documentar variáveis de ambiente necessárias
+- [ ] Criar guia de contribuição (CONTRIBUTING.md)
+- [ ] Setup analytics (Mixpanel ou Plausible)
+- [ ] Setup monitoring (Sentry para erros)
+- [ ] Criar landing page (opcional)
+- [ ] Deploy em produção via GitHub Actions
+- [ ] Testar em múltiplos navegadores e dispositivos
+- [ ] Monitorar logs em tempo real
+- [ ] Criar runbook para emergências (como rollback)
+
+**Requisitos:** Todas as fases anteriores concluídas
+**Prioridade:** 🔴 CRÍTICA
+
+---
 
 ### ⬜ Task 4.1: Otimizar performance e offline-first
 
@@ -418,6 +649,7 @@ O sistema usa **duas tabelas de palavras**:
    - FK para `words_global.id`
 
 **Fluxo de Busca:**
+
 ```
 fetchWord("hello") → Procura em:
   1. Local cache (AsyncStorage)
@@ -427,11 +659,37 @@ fetchWord("hello") → Procura em:
 ```
 
 **Benefícios:**
+
 - ✅ Sem redundância de palavras globais
 - ✅ Isolamento de dados por org
 - ✅ Customizações por organização (tradução diferente)
 - ✅ Performance otimizada
 - ✅ Compatível com RLS e segurança
+
+---
+
+### 🚀 Deployment: OceanDigital
+
+**Plataforma:** OceanDigital Droplet (máquina dedicada)
+**Stack DevOps:**
+- **Containerização:** Docker + docker-compose
+- **Web Server:** Nginx (reverse proxy + SSL/TLS)
+- **SSL:** Let's Encrypt com auto-renewal (Certbot)
+- **CI/CD:** GitHub Actions (push main → build → SSH deploy → docker-compose up)
+- **Monitoring:** Sentry (erros), Mixpanel (analytics), status page
+- **Backups:** Snapshots automáticos OceanDigital (configurar)
+
+**Fluxo de Deploy:**
+
+```
+1. Git push para main branch
+2. GitHub Actions dispara workflow
+3. Build Docker image
+4. SSH para OceanDigital
+5. Pull código, docker build, docker-compose up -d
+6. Nginx redireciona HTTP → HTTPS
+7. Health check automático
+```
 
 ---
 
@@ -444,9 +702,10 @@ fetchWord("hello") → Procura em:
   - Success: `#10B981` (Emerald)
   - Error: `#EF4444` (Red)
   - Background: `#F8FAFC` (Slate 50)
-- **Stack:** Expo + TypeScript + NativeWind + Supabase (Multi-Tenant Híbrido) + AsyncStorage
+- **Stack:** Expo + TypeScript + NativeWind + Supabase (Multi-Tenant Híbrido) + AsyncStorage + Docker + Nginx + OceanDigital
 - **Zero Delírios:** Não usar bibliotecas incompatíveis com Expo/PWA
 - **Profissionalismo:** Código para portfólio LinkedIn
+- **Performance:** Target < 250KB bundle (gzipped), Lighthouse > 90 em Performance
 
 ---
 
