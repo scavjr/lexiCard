@@ -1,6 +1,7 @@
 /**
  * Tipos gerados automaticamente do Supabase
  * Execute `supabase gen types typescript` para regenerar
+ * Inclui: flashcard_sessions, organizations, user_progress, users, words, words_global
  */
 
 export type Json =
@@ -190,6 +191,7 @@ export type Database = {
           translation: string
           updated_at: string
           word: string
+          word_global_id: string | null
         }
         Insert: {
           audio_url?: string | null
@@ -201,6 +203,7 @@ export type Database = {
           translation: string
           updated_at?: string
           word: string
+          word_global_id?: string | null
         }
         Update: {
           audio_url?: string | null
@@ -212,6 +215,7 @@ export type Database = {
           translation?: string
           updated_at?: string
           word?: string
+          word_global_id?: string | null
         }
         Relationships: [
           {
@@ -228,7 +232,41 @@ export type Database = {
             referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "words_word_global_id_fkey"
+            columns: ["word_global_id"]
+            isOneToOne: false
+            referencedRelation: "words_global"
+            referencedColumns: ["id"]
+          },
         ]
+      }
+      words_global: {
+        Row: {
+          audio_url: string | null
+          created_at: string | null
+          definition: string | null
+          id: string
+          updated_at: string | null
+          word: string
+        }
+        Insert: {
+          audio_url?: string | null
+          created_at?: string | null
+          definition?: string | null
+          id?: string
+          updated_at?: string | null
+          word: string
+        }
+        Update: {
+          audio_url?: string | null
+          created_at?: string | null
+          definition?: string | null
+          id?: string
+          updated_at?: string | null
+          word?: string
+        }
+        Relationships: []
       }
     }
     Views: {

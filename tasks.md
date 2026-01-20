@@ -8,6 +8,83 @@
 
 ---
 
+## 🏗️ Decisões Arquiteturais
+
+### Estratégia de Palavras Híbrida (DOCUMENTADA)
+**Decisão:** Implementar com duas tabelas coordenadas para otimizar armazenamento e isolamento:
+
+**Tabela 1: `words_global`** (Compartilhada entre todas as orgs)
+```sql
+- id: UUID (PK)
+- word: TEXT (UNIQUE) -- "hello", "mundo", etc
+- definition: TEXT -- Definição universal
+- audio_url: TEXT -- Pronúncia
+- created_at: TIMESTAMP
+- updated_at: TIMESTAMP
+-- Sem organization_id (realmente global)
+```
+
+**Tabela 2: `words`** (Personalizações por organização)
+```sql
+- id: UUID (PK)
+- word_global_id: UUID (FK para words_global) -- Vincula à palavra global
+- organization_id: UUID (FK para organizations) -- Isolamento org
+- translation: TEXT -- Tradução customizada pela org
+- custom_definition: TEXT (nullable) -- Override da definição
+- created_by: UUID (FK para users)
+- created_at: TIMESTAMP
+- updated_at: TIMESTAMP
+-- RLS: SELECT/INSERT/UPDATE/DELETE filtrado por organization_id
+```
+
+**Fluxo de Fetch:**
+1. Usuário solicita palavra "apple"
+2. Buscar em AsyncStorage local (org-specific namespace)
+3. Se não encontrar, buscar em `words_global` + customizações em `words` WHERE organization_id
+4. Se não encontrar, buscar em dictionaryapi.dev
+5. Salvar base em `words_global` (UNIQUE, primeira org ganha) + customizações em `words`
+
+**Benefícios:**
+- ✅ Zero redundância: "hello" armazenado 1x globalmente
+- ✅ Isolamento mantido: Orgs só veem suas customizações
+- ✅ Performance: `words_global` não cresce por org, RLS rápido em `words`
+- ✅ Flexibilidade: Cada org pode ter tradução diferente para a mesma palavra
+- ✅ Segurança: organization_id filtro em `words`; anonymous read em `words_global`
+
+**Status:** ✅ IMPLEMENTADO - Migração criada e wordService ajustado
+
+---
+
+### ✅ Task 1.4: Implementar abordagem híbrida de palavras
+
+**Descrição:** Criar tabela `words_global`, ajustar `wordService.ts` e atualizar tipos.
+
+**Subtarefas:**
+
+- [x] Criar migração `words_global` em Supabase
+  - Tabela: id, word (UNIQUE), definition, audio_url, timestamps
+  - RLS policies: leitura pública, escrita autenticada
+  - Índice em word para buscas rápidas
+- [x] Modificar tabela `words` com FK para `words_global`
+  - Adicionar coluna `word_global_id`
+  - Migrar dados existentes
+  - Criar índice em `word_global_id`
+- [x] Criar triggers automáticos para `updated_at`
+- [x] Regenerar tipos Supabase (`database.ts`)
+  - Incluir tipos para `words_global`
+  - Adicionar FK `word_global_id` em `words`
+- [x] Ajustar `wordService.ts` para estratégia híbrida
+  - `getFromSupabase()`: UNION de `words_global` + `words` por org
+  - `saveWord()`: Inserir base em global, customizações em org
+  - Suporte a fallback para dados legados
+- [x] Validar compilação TypeScript
+
+**Resultado:** Zero redundância (palavras globais 1x) + isolamento mantido (org-specific customizações)
+
+**Status:** ✅ CONCLUÍDO
+
+---
+
 ## 🔧 Fase 0: Infraestrutura & Setup
 
 ### ✅ Task 0.1: Configurar Supabase para o LexiCard
@@ -99,28 +176,34 @@
 
 ---
 
-### ⬜ Task 1.3: Criar sistema de cache híbrido (Local/Cloud/API) com Multi-Tenant
+### ✅ Task 1.3: Criar sistema de cache híbrido (Local/Cloud/API) com Multi-Tenant
 
-**Descrição:** Implementar helper de fetch com estratégia de cache respeitando isolamento de dados.
+**Descrição:** Implementar helper de fetch com estratégia de cache respeitando isolamento de dados usando abordagem **híbrida de palavras**.
+
+**Estratégia Híbrida (Implementada):**
+- Usa `words_global` (compartilhada) + `words` (customizadas por org)
+- Evita redundância enquanto mantém isolamento
+- Primeira org cria palavra global, outras reutilizam
 
 **Subtarefas:**
 
 - [x] Instalar `@react-native-async-storage/async-storage`
 - [x] Criar hook `useLocalStorage.ts` para AsyncStorage com namespace por `organization_id`
-- [ ] Criar service `wordService.ts` com lógica de cache:
+- [x] Criar service `wordService.ts` com lógica de cache:
   - Primeiro: verificar AsyncStorage (apenas dados da org atual)
-  - Segundo: verificar Supabase (filtrado por organization_id)
+  - Segundo: verificar Supabase (`words_global` + `words` da org)
   - Terceiro: consultar dictionaryapi.dev
-  - Quarto: salvar em Supabase (associado à org) + AsyncStorage (com org_id)
-- [ ] Criar interface `IWord` com `organization_id`
-- [ ] Implementar função `getOrganizationWords()` que filtra por org
-- [ ] Adicionar tratamento de erros e offline-first
-- [ ] Validar que usuário pertence à organização antes de acessar dados
-- [ ] Testar fluxo completo de cache com múltiplas orgs
+  - Quarto: salvar em `words_global` (1x) + `words` (customizações org)
+- [x] Criar interface `IWord` com `organization_id`
+- [x] Implementar função `getOrganizationWords()` que filtra por org
+- [x] Adicionar tratamento de erros e offline-first
+- [x] Validar que usuário pertence à organização antes de acessar dados
+- [x] Testar fluxo completo de cache com múltiplas orgs
 
 **Requisitos:** Task 1.2 concluída
 **Prioridade:** 🔴 CRÍTICA
-**Nota Multi-Tenant:** Cache local deve ser separado por organization_id
+**Nota Multi-Tenant:** Cache local separado por organization_id. Palavras globais compartilhadas, customizações isoladas.
+**Status:** ✅ CONCLUÍDO (com abordagem híbrida)
 
 ---
 
@@ -316,6 +399,42 @@
 
 ## 📌 Notas Importantes
 
+### 🏗️ Decisão Arquitetural: Estratégia de Palavras Híbrida
+
+**Escolhido: ABORDAGEM HÍBRIDA**
+
+O sistema usa **duas tabelas de palavras**:
+
+1. **`words_global`** (SEM organization_id)
+   - Compartilhada entre TODAS as organizações
+   - Criada pela primeira org que pesquisa uma palavra
+   - Reutilizada por outras orgs (mais eficiente)
+   - Dados primários: palavra, definição, áudio_url
+
+2. **`words`** (COM organization_id)
+   - Palavras customizadas por organização
+   - Traduções personalizadas por org
+   - Notas e exemplos adicionais
+   - FK para `words_global.id`
+
+**Fluxo de Busca:**
+```
+fetchWord("hello") → Procura em:
+  1. Local cache (AsyncStorage)
+  2. words_global + words customizadas da org
+  3. API externa (se não encontrar)
+  4. Salva em words_global (1x) + words_org (customizações)
+```
+
+**Benefícios:**
+- ✅ Sem redundância de palavras globais
+- ✅ Isolamento de dados por org
+- ✅ Customizações por organização (tradução diferente)
+- ✅ Performance otimizada
+- ✅ Compatível com RLS e segurança
+
+---
+
 - **Multi-Tenant:** Todas as queries devem filtrar por `organization_id`. RLS é obrigatório.
 - **Isolamento de Dados:** Usuários só veem dados de sua organização.
 - **Tipagem Estrita:** Proibido usar `any`. Sempre criar interfaces TypeScript.
@@ -325,7 +444,7 @@
   - Success: `#10B981` (Emerald)
   - Error: `#EF4444` (Red)
   - Background: `#F8FAFC` (Slate 50)
-- **Stack:** Expo + TypeScript + NativeWind + Supabase (Multi-Tenant) + AsyncStorage
+- **Stack:** Expo + TypeScript + NativeWind + Supabase (Multi-Tenant Híbrido) + AsyncStorage
 - **Zero Delírios:** Não usar bibliotecas incompatíveis com Expo/PWA
 - **Profissionalismo:** Código para portfólio LinkedIn
 
