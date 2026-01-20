@@ -1,30 +1,68 @@
 {
   "expo": {
-    "name": "lexicard",
+    "name": "LexiCard - Aprenda Vocabulário",
     "slug": "lexicard",
     "version": "1.0.0",
+    "scheme": "lexicard",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
+    "description": "Aprenda vocabulário em inglês com flashcards interativos. Suporte offline-first com sincronização em nuvem.",
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#F8FAFC"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.lexicard.app",
+      "buildNumber": "1"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#F8FAFC"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.lexicard.app",
+      "versionCode": 1
     },
     "web": {
-      "favicon": "./assets/favicon.png"
-    }
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro",
+      "output": "server",
+      "name": "LexiCard",
+      "shortName": "LexiCard",
+      "description": "Aprenda vocabulário com flashcards",
+      "dir": "ltr",
+      "lang": "pt-BR",
+      "scope": "/",
+      "startUrl": "/",
+      "display": "standalone",
+      "orientation": "portrait",
+      "backgroundColor": "#F8FAFC",
+      "themeColor": "#4F46E5",
+      "categories": ["education", "productivity"],
+      "screenshots": [
+        {
+          "src": "./assets/icon.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    "plugins": [
+      [
+        "expo-font",
+        {
+          "fonts": [
+            "./assets/fonts/Inter_400Regular.ttf",
+            "./assets/fonts/Inter_700Bold.ttf"
+          ]
+        }
+      ]
+    ]
   }
 }

@@ -1,0 +1,65 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Variáveis de cor customizadas */
+@layer base {
+  :root {
+    --color-primary: #4F46E5;
+    --color-primary-light: #e6ecff;
+    --color-success: #10B981;
+    --color-success-light: #d1fae5;
+    --color-error: #EF4444;
+    --color-error-light: #fee2e2;
+    --color-background: #F8FAFC;
+    --color-text: #1E293B;
+  }
+
+  /* Tipografia customizada */
+  body {
+    @apply font-inter-regular text-color-text;
+  }
+
+  h1 {
+    @apply font-inter-bold text-2xl;
+  }
+
+  h2 {
+    @apply font-inter-bold text-xl;
+  }
+
+  h3 {
+    @apply font-inter-bold text-lg;
+  }
+
+  button {
+    @apply transition-all duration-300;
+  }
+}
+
+/* Utilitários customizados */
+@layer components {
+  .btn-primary {
+    @apply px-4 py-2 rounded-2xl bg-primary font-inter-bold text-white shadow-sm hover:shadow-md transition-all duration-300;
+  }
+
+  .btn-success {
+    @apply px-4 py-2 rounded-2xl bg-success font-inter-bold text-white shadow-sm hover:shadow-md transition-all duration-300;
+  }
+
+  .btn-error {
+    @apply px-4 py-2 rounded-2xl bg-error font-inter-bold text-white shadow-sm hover:shadow-md transition-all duration-300;
+  }
+
+  .card {
+    @apply bg-white rounded-3xl shadow-sm p-6 border border-background-200;
+  }
+
+  .card-hover {
+    @apply card hover:shadow-md transition-shadow duration-300;
+  }
+
+  .input-base {
+    @apply px-3 py-2 rounded-2xl border border-background-300 font-inter-regular text-color-text placeholder-gray-400;
+  }
+}

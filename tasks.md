@@ -56,21 +56,22 @@
 
 ## 📦 Fase 1: Setup & Estrutura Base
 
-### ⬜ Task 1.1: Inicializar projeto Expo com TypeScript e NativeWind
+### ✅ Task 1.1: Inicializar projeto Expo com TypeScript e NativeWind
 
 **Descrição:** Configurar estrutura base do projeto com dependências necessárias.
 
 **Subtarefas:**
 
-- [ ] Verificar se projeto Expo já existe (existente em workspace)
-- [ ] Instalar dependências: TypeScript, NativeWind, TailwindCSS
-- [ ] Configurar `tsconfig.json` com tipagem estrita
-- [ ] Configurar `tailwind.config.js` com cores customizadas (paleta LexiCard)
-- [ ] Criar estrutura de pastas (`/src/components`, `/src/services`, `/src/hooks`, `/src/store`, `/src/types`)
-- [ ] Configurar `expo.json` para PWA (ícones, manifest, nome)
+- [x] Verificar se projeto Expo já existe (existente em workspace)
+- [x] Instalar dependências: TypeScript, NativeWind, TailwindCSS
+- [x] Configurar `tsconfig.json` com tipagem estrita
+- [x] Configurar `tailwind.config.js` com cores customizadas (paleta LexiCard)
+- [x] Criar estrutura de pastas (`/src/components`, `/src/services`, `/src/hooks`, `/src/store`, `/src/types`)
+- [x] Configurar `app.json` para PWA (ícones, manifest, nome)
 
 **Requisitos:** Projeto Node.js com npm/yarn
 **Prioridade:** 🔴 CRÍTICA
+**Status:** ✅ CONCLUÍDO
 
 ---
 
