@@ -75,26 +75,27 @@
 
 ---
 
-### ⬜ Task 1.2: Configurar Supabase Client e tipos TypeScript (Multi-Tenant)
+### ✅ Task 1.2: Configurar Supabase Client e tipos TypeScript (Multi-Tenant)
 
 **Descrição:** Criar cliente Supabase com tipagem automática das tabelas e suporte a multi-tenant.
 
 **Subtarefas:**
 
-- [ ] Instalar `@supabase/supabase-js`
-- [ ] Criar arquivo `src/services/supabase.ts` com inicialização do cliente
-- [ ] Gerar tipos TypeScript do banco com `supabase gen types typescript`
-- [ ] Criar arquivo `src/types/database.ts` com tipos das tabelas
-- [ ] Criar arquivo `src/types/models.ts` com interfaces do negócio
-- [ ] Criar hook `useOrganization.ts` para gerenciar contexto da organização
-- [ ] Implementar validação de acesso (verificar se usuário pertence à org)
-- [ ] Criar helper para filtrar queries por `organization_id`
-- [ ] Testar conexão com Supabase
-- [ ] Testar isolamento de dados entre organizações
+- [x] Instalar `@supabase/supabase-js`
+- [x] Criar arquivo `src/services/supabase.ts` com inicialização do cliente
+- [x] Gerar tipos TypeScript do banco com `supabase gen types typescript`
+- [x] Criar arquivo `src/types/database.ts` com tipos das tabelas
+- [x] Criar arquivo `src/types/models.ts` com interfaces do negócio (em index.ts)
+- [x] Criar hook `useOrganization.ts` para gerenciar contexto da organização
+- [x] Implementar validação de acesso (verificar se usuário pertence à org)
+- [x] Criar helper para filtrar queries por `organization_id` (em src/utils/validation.ts)
+- [x] Testar conexão com Supabase
+- [x] Testar isolamento de dados entre organizações
 
 **Requisitos:** Task 0.1 e 1.1 concluídas
 **Prioridade:** 🔴 CRÍTICA
 **Nota Multi-Tenant:** Sempre filtrar por `organization_id` nas queries
+**Status:** ✅ CONCLUÍDO
 
 ---
 
@@ -104,8 +105,8 @@
 
 **Subtarefas:**
 
-- [ ] Instalar `@react-native-async-storage/async-storage`
-- [ ] Criar hook `useLocalStorage.ts` para AsyncStorage com namespace por `organization_id`
+- [x] Instalar `@react-native-async-storage/async-storage`
+- [x] Criar hook `useLocalStorage.ts` para AsyncStorage com namespace por `organization_id`
 - [ ] Criar service `wordService.ts` com lógica de cache:
   - Primeiro: verificar AsyncStorage (apenas dados da org atual)
   - Segundo: verificar Supabase (filtrado por organization_id)

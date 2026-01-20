@@ -1,34 +1,18 @@
 {
   "extends": "expo/tsconfig.base",
   "compilerOptions": {
-    // Tipagem estrita
     "strict": true,
     "noImplicitAny": true,
     "strictNullChecks": true,
-    "strictFunctionTypes": true,
-    "strictBindCallApply": true,
-    "strictPropertyInitialization": true,
-    "noImplicitThis": true,
-    "alwaysStrict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
     "forceConsistentCasingInFileNames": true,
-    
-    // Módulos e resolução
-    "module": "esnext",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "resolveJsonModule": true,
-    "declaration": true,
-    "declarationMap": true,
-    "sourceMap": true,
-    
-    // JSX
     "jsx": "react-jsx",
     "jsxImportSource": "nativewind",
-    
-    // Path aliases
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"],
@@ -39,15 +23,7 @@
       "@types/*": ["src/types/*"],
       "@screens/*": ["src/screens/*"],
       "@utils/*": ["src/utils/*"]
-    },
-    
-    // Compatibilidade
-    "target": "ES2020",
-    "lib": ["ES2020"],
-    "useDefineForClassFields": true,
-    "allowSyntheticDefaultImports": true,
-    "esModuleInterop": true,
-    "skipLibCheck": true
+    }
   },
   "include": ["**/*.ts", "**/*.tsx"],
   "exclude": ["node_modules", "dist", "build"]
