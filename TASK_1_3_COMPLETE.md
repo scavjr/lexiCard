@@ -11,6 +11,7 @@ Implementei um serviço robusto de palavras com estratégia de cache híbrido qu
 ### **src/services/wordService.ts** (480 linhas)
 
 Serviço singleton que gerencia palavras com:
+
 - ✅ Cache híbrido: AsyncStorage → Supabase → dictionaryapi.dev
 - ✅ Isolamento multi-tenant obrigatório
 - ✅ Retry automático com exponential backoff
@@ -49,27 +50,27 @@ Serviço singleton que gerencia palavras com:
 
 ### Busca e Obtenção
 
-| Método | Descrição |
-|--------|-----------|
-| `fetchWord(word)` | Busca com estratégia de cache híbrido |
-| `getOrganizationWords()` | Todas as palavras da org (Supabase) |
-| `searchWords(query, limit)` | Busca com filtro ILIKE |
-| `getWordById(id)` | Obter palavra por ID com validação |
+| Método                      | Descrição                             |
+| --------------------------- | ------------------------------------- |
+| `fetchWord(word)`           | Busca com estratégia de cache híbrido |
+| `getOrganizationWords()`    | Todas as palavras da org (Supabase)   |
+| `searchWords(query, limit)` | Busca com filtro ILIKE                |
+| `getWordById(id)`           | Obter palavra por ID com validação    |
 
 ### Gerenciamento
 
-| Método | Descrição |
-|--------|-----------|
+| Método                    | Descrição                             |
+| ------------------------- | ------------------------------------- |
 | `updateWord(id, updates)` | Atualizar palavra (com validação org) |
-| `deleteWord(id)` | Deletar palavra |
-| `syncLocalCache()` | Sincronizar cache com Supabase |
+| `deleteWord(id)`          | Deletar palavra                       |
+| `syncLocalCache()`        | Sincronizar cache com Supabase        |
 
 ### Contexto
 
-| Método | Descrição |
-|--------|-----------|
+| Método                      | Descrição                          |
+| --------------------------- | ---------------------------------- |
 | `setContext(orgId, userId)` | Inicializar contexto (obrigatório) |
-| `validateContext()` | Privado - verifica contexto |
+| `validateContext()`         | Privado - verifica contexto        |
 
 ---
 
@@ -113,20 +114,21 @@ await wordService.getWordById("outro-org-word-id");
 ## ⚡ Tratamento de Erros
 
 Todos os erros são `LexiCardError` com:
+
 - `code` - Código do erro (ex: "NOT_FOUND", "ACCESS_DENIED")
 - `message` - Mensagem legível
 - `statusCode` - Código HTTP (opcional)
 
 ### Erros Específicos
 
-| Código | Situação |
-|--------|----------|
-| `CONTEXT_NOT_SET` | Contexto não inicializado |
-| `INVALID_ORG_ID` | ID de org inválido |
-| `FETCH_WORD_ERROR` | Erro na busca |
-| `NOT_FOUND` | Recurso não existe |
-| `ACCESS_DENIED` | Sem permissão |
-| `SAVE_WORD_ERROR` | Erro ao salvar |
+| Código             | Situação                  |
+| ------------------ | ------------------------- |
+| `CONTEXT_NOT_SET`  | Contexto não inicializado |
+| `INVALID_ORG_ID`   | ID de org inválido        |
+| `FETCH_WORD_ERROR` | Erro na busca             |
+| `NOT_FOUND`        | Recurso não existe        |
+| `ACCESS_DENIED`    | Sem permissão             |
+| `SAVE_WORD_ERROR`  | Erro ao salvar            |
 
 ---
 
@@ -186,7 +188,9 @@ await wordService.syncLocalCache();
 Fase 2 vai implementar:
 
 ### **Task 2.1:** Componente Flashcard com animação flip
-### **Task 2.2:** Player de áudio para pronúncia  
+
+### **Task 2.2:** Player de áudio para pronúncia
+
 ### **Task 2.3:** Sistema de feedback e pontuação
 
 ---
@@ -252,10 +256,10 @@ export function WordsScreen() {
 
 ### 📊 Progresso Fase 1
 
-| Task | Status |
-|------|--------|
-| 1.1 - Setup Expo + TypeScript + NativeWind | ✅ |
-| 1.2 - Supabase Client + Tipos | ✅ |
-| 1.3 - Cache Híbrido + Word Service | ✅ |
+| Task                                       | Status |
+| ------------------------------------------ | ------ |
+| 1.1 - Setup Expo + TypeScript + NativeWind | ✅     |
+| 1.2 - Supabase Client + Tipos              | ✅     |
+| 1.3 - Cache Híbrido + Word Service         | ✅     |
 
 **Fase 1 Completa!** 🎉
