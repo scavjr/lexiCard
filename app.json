@@ -32,7 +32,7 @@
     "web": {
       "favicon": "./assets/favicon.png",
       "bundler": "metro",
-      "output": "server",
+      "output": "single",
       "name": "LexiCard",
       "shortName": "LexiCard",
       "description": "Aprenda vocabulário com flashcards",

@@ -54,7 +54,10 @@ export const FlashCardDemo: React.FC = () => {
   };
 
   const handleShowExample = () => {
-    Alert.alert("📖 Definição", current.definition || "Sem definição disponível");
+    Alert.alert(
+      "📖 Definição",
+      current.definition || "Sem definição disponível",
+    );
   };
 
   const moveToNext = () => {

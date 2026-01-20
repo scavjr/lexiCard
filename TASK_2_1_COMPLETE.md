@@ -3,6 +3,7 @@
 ## Resumo Executivo
 
 Componente React Native totalmente funcional com animação de flip 3D para o aplicativo LexiCard. Implementado com:
+
 - ✅ Animação smooth (300ms) com interpolação de rotação
 - ✅ Design System completo (cores, tipografia, espaçamento)
 - ✅ Acessibilidade (a11y) com screen readers
@@ -20,21 +21,22 @@ Componente React Native totalmente funcional com animação de flip 3D para o ap
 
 ```typescript
 interface FlashCardProps {
-  word: string;              // Palavra em inglês
-  translation: string;        // Tradução em português
-  definition?: string;        // Definição em inglês (opcional)
-  audioUrl?: string;          // URL do áudio para pronúncia
-  onCorrect: () => void;      // Callback: usuário acertou
-  onIncorrect: () => void;    // Callback: usuário errou
-  onAudioPlay?: () => void;   // Callback: play áudio
+  word: string; // Palavra em inglês
+  translation: string; // Tradução em português
+  definition?: string; // Definição em inglês (opcional)
+  audioUrl?: string; // URL do áudio para pronúncia
+  onCorrect: () => void; // Callback: usuário acertou
+  onIncorrect: () => void; // Callback: usuário errou
+  onAudioPlay?: () => void; // Callback: play áudio
   onShowExample?: () => void; // Callback: mostrar definição
-  index?: number;             // Índice na série (para a11y)
+  index?: number; // Índice na série (para a11y)
 }
 ```
 
 #### Features Principais
 
 **Frente do Card (Azul Indigo #4F46E5)**
+
 ```
 ┌─────────────────────────┐
 │     SERENDIPITY         │
@@ -53,6 +55,7 @@ interface FlashCardProps {
 - Hint "Toque para virar"
 
 **Verso do Card (Verde Emerald #10B981)**
+
 ```
 ┌─────────────────────────┐
 │     Serendipidade       │
@@ -74,6 +77,7 @@ interface FlashCardProps {
 #### Animação de Flip
 
 **Implementação:**
+
 - Usa `Animated` API do React Native
 - Duração: 300ms (conforme design system)
 - Interpolação em 3 fases:
@@ -83,6 +87,7 @@ interface FlashCardProps {
   4. Rotação Y 180° → 360° (verso aparece)
 
 **Código-chave:**
+
 ```typescript
 const flipAnimation = useRef(new Animated.Value(0)).current;
 
@@ -100,22 +105,26 @@ const backInterpolate = flipAnimation.interpolate({
 #### Design System
 
 **Cores (Tailwind palette)**
+
 - Frente: Indigo gradient (#4F46E5 → #6366F1)
 - Verso: Emerald gradient (#10B981 → #34D399)
 - Ícones: White com 20% opacity background
 - Texto: White (rgba 100% e 85%)
 
 **Tipografia**
+
 - Palavra/Tradução: Inter 48px/40px Bold
 - Definição: Inter 14px Regular Italic
 - Labels: Inter 12px Bold
 
 **Espaçamento**
+
 - Card padding: 32px vertical, 24px horizontal
 - Ícones gap: 16px
 - Buttons gap: 16px
 
 **Bordas & Sombras**
+
 - Border radius: 24px (rounded-2xl)
 - Shadow: 4px offset, 8px blur, 15% opacity (elevation 8 Android)
 
@@ -153,6 +162,7 @@ const cardHeight = 280;
 #### Propósito
 
 Exemplo de uso completo do componente com:
+
 - Array de 3 cards de exemplo
 - Navegação entre cards
 - Callbacks funcionais com alerts
@@ -224,6 +234,7 @@ src/
 ### TypeScript
 
 ✅ **Sem erros**
+
 ```
 > tsc --noEmit
 (sem output = sucesso)
@@ -341,17 +352,17 @@ const { word, translation, definition, audio_url } = await wordService.fetchWord
 
 ## Métricas
 
-| Métrica | Valor |
-|---------|-------|
-| Linhas de código (componente) | 340 |
-| Linhas de código (demo) | 170 |
-| Props obrigatórias | 4 (word, translation, onCorrect, onIncorrect) |
-| Props opcionais | 4 |
-| Duração animação | 300ms |
-| Tamanho máximo card | 400px (responsive) |
-| Altura card | 280px |
-| Cores utilizadas | 2 (Indigo, Emerald) |
-| Acessibilidade | WCAG 2.1 Level AA |
+| Métrica                       | Valor                                         |
+| ----------------------------- | --------------------------------------------- |
+| Linhas de código (componente) | 340                                           |
+| Linhas de código (demo)       | 170                                           |
+| Props obrigatórias            | 4 (word, translation, onCorrect, onIncorrect) |
+| Props opcionais               | 4                                             |
+| Duração animação              | 300ms                                         |
+| Tamanho máximo card           | 400px (responsive)                            |
+| Altura card                   | 280px                                         |
+| Cores utilizadas              | 2 (Indigo, Emerald)                           |
+| Acessibilidade                | WCAG 2.1 Level AA                             |
 
 ---
 

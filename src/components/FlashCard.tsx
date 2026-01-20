@@ -115,22 +115,30 @@ export const FlashCard: React.FC<FlashCardProps> = ({
 
   return (
     <View
-      style={{
-        alignItems: "center",
-        justifyContent: "center",
-      } as any}
+      style={
+        {
+          alignItems: "center",
+          justifyContent: "center",
+        } as any
+      }
       accessible
       accessibilityRole="button"
       accessibilityLabel={`Flashcard ${index + 1}: ${word}`}
-      accessibilityHint={isFlipped ? "Verso visível. Toque para virar" : "Frente visível. Toque para virar"}
+      accessibilityHint={
+        isFlipped
+          ? "Verso visível. Toque para virar"
+          : "Frente visível. Toque para virar"
+      }
     >
       {/* Container com perspectiva 3D */}
       <View
-        style={{
-          width: cardWidth,
-          height: cardHeight,
-          perspective: 1000,
-        } as any}
+        style={
+          {
+            width: cardWidth,
+            height: cardHeight,
+            perspective: 1000,
+          } as any
+        }
       >
         {/* FRENTE DO CARD */}
         <Animated.View

@@ -678,6 +678,7 @@ fetchWord("hello") → Procura em:
 
 **Plataforma:** OceanDigital Droplet (máquina dedicada)
 **Stack DevOps:**
+
 - **Containerização:** Docker + docker-compose
 - **Web Server:** Nginx (reverse proxy + SSL/TLS)
 - **SSL:** Let's Encrypt com auto-renewal (Certbot)
