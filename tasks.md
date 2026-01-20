@@ -215,29 +215,35 @@
 
 ## 🎨 Fase 2: Componentes Core
 
-### ⬜ Task 2.1: Criar componente Flashcard com animação de flip
+### ✅ Task 2.1: Criar componente FlashCard com animação de flip
 
-**Descrição:** Implementar componente visual do flashcard com interações.
+**Descrição:** Implementar componente visual do flashcard com animação 3D suave.
 
 **Subtarefas:**
 
-- [ ] Criar componente `FlashCard.tsx` (PascalCase)
-- [ ] Implementar props TypeScript (word, onFeedback)
-- [ ] Adicionar animação de flip com React Native Reanimated (ou CSS)
-- [ ] Estilizar com NativeWind (cores da paleta, rounded-xl, sombras)
-- [ ] Implementar frente do card:
-  - Palavra em Inglês (destaque)
-  - Ícone de áudio
-  - Ícone de exemplo
-  - Ícone de tradução
-  - Clique central para flip
-- [ ] Implementar verso do card:
-  - Tradução em Português
-  - Botões de feedback (Acerto/Erro)
-- [ ] Testar interações e animações
+- [x] Criar componente `FlashCard.tsx` com interface FlashCardProps typada
+- [x] Implementar animação de flip (300ms com React Native Animated API)
+- [x] Estilizar frente (Indigo #4F46E5):
+  - Palavra em tamanho 48px bold
+  - 3 ícones interativos (áudio, exemplo, tradução)
+  - Hint "Toque para virar"
+- [x] Estilizar verso (Emerald #10B981):
+  - Tradução em tamanho 40px
+  - Definição em itálico (14px)
+  - Botões de feedback lado a lado (Acertei, Errei)
+- [x] Aplicar design system (gradientes, sombras, border-radius-24, transições 300ms)
+- [x] Acessibilidade completa (screen readers, roles, labels)
+- [x] Responsividade (max 400px, adapta-se a tela)
+- [x] Instalar `expo-linear-gradient`
+- [x] Criar exemplo de uso `FlashCard.demo.tsx`
+- [x] Validar TypeScript sem erros
+- [x] Documentar em `TASK_2_1_COMPLETE.md`
 
-**Requisitos:** Task 1.1 concluída
-**Prioridade:** 🟠 ALTA
+**Resultado:** Componente totalmente funcional com animação flip, design polido, acessibilidade WCAG AA
+
+**Requisitos:** Task 1.4 concluída
+**Prioridade:** 🔴 CRÍTICA
+**Status:** ✅ CONCLUÍDO
 
 ---
 
