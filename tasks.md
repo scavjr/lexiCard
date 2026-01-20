@@ -1,6 +1,7 @@
 # 📋 Tarefas do Projeto LexiCard PWA
 
 ## Status das Tarefas
+
 - ⬜ **Não iniciado**
 - 🟡 **Em progresso**
 - ✅ **Concluído**
@@ -9,40 +10,46 @@
 
 ## 🔧 Fase 0: Infraestrutura & Setup
 
-### ⬜ Task 0.1: Configurar Supabase para o LexiCard
+### ✅ Task 0.1: Configurar Supabase para o LexiCard
+
 **Descrição:** Criar novo projeto Supabase e banco de dados para o lexicard.
 
 **Subtarefas:**
-- [ ] Criar novo projeto Supabase para lexicard
-- [ ] Obter credenciais do projeto (URL, anon key, project ref)
-- [ ] Atualizar arquivo `mcp.json` com as novas credenciais
-- [ ] Criar arquivo `.env.local` com variáveis de ambiente
-- [ ] Testar conexão com Supabase
+
+- [x] Criar novo projeto Supabase para lexicard
+- [x] Obter credenciais do projeto (URL, anon key, project ref)
+- [x] Atualizar arquivo `mcp.json` com as novas credenciais
+- [x] Criar arquivo `.env.local` com variáveis de ambiente
+- [x] Testar conexão com Supabase
 
 **Requisitos:** Token de acesso Supabase válido
 **Prioridade:** 🔴 CRÍTICA
+**Status:** ✅ CONCLUÍDO
 
 ---
 
-### ⬜ Task 0.2: Criar schema do banco de dados (Multi-Tenant)
+### ✅ Task 0.2: Criar schema do banco de dados (Multi-Tenant)
+
 **Descrição:** Implementar as tabelas e políticas de segurança no PostgreSQL com suporte a multi-tenant.
 
 **Subtarefas:**
-- [ ] Criar tabela `organizations` (id, name, plan_type, created_at)
-- [ ] Criar tabela `users` (id, email, organization_id, role, created_at) - FK para organizations
-- [ ] Criar tabela `words` (id, word, translation, definition, audio_url, organization_id, created_by, created_at) - FK para organizations
-- [ ] Criar tabela `user_progress` (id, user_id, word_id, organization_id, acertos, data_ultimo_acerto) - FKs para users/words/organizations
-- [ ] Criar tabela `flashcard_sessions` (id, user_id, organization_id, data_sessao, total_aprendidas) - FKs para users/organizations
-- [ ] Implementar RLS (Row Level Security) por organização:
+
+- [x] Criar tabela `organizations` (id, name, plan_type, created_at)
+- [x] Criar tabela `users` (id, email, organization_id, role, created_at) - FK para organizations
+- [x] Criar tabela `words` (id, word, translation, definition, audio_url, organization_id, created_by, created_at) - FK para organizations
+- [x] Criar tabela `user_progress` (id, user_id, word_id, organization_id, acertos, data_ultimo_acerto) - FKs para users/words/organizations
+- [x] Criar tabela `flashcard_sessions` (id, user_id, organization_id, data_sessao, total_aprendidas) - FKs para users/organizations
+- [x] Implementar RLS (Row Level Security) por organização:
   - Usuários só veem dados da sua organização
   - Usuários só veem suas próprias progressões
   - Admins da org veem todos os dados da org
-- [ ] Criar políticas de isolamento de dados entre tenants
-- [ ] Adicionar índices para otimização (organization_id, user_id, word_id)
-- [ ] Executar migrations no Supabase
+- [x] Criar políticas de isolamento de dados entre tenants
+- [x] Adicionar índices para otimização (organization_id, user_id, word_id)
+- [x] Executar migrations no Supabase
 
 **Requisitos:** Task 0.1 concluída
 **Prioridade:** 🔴 CRÍTICA
+**Status:** ✅ CONCLUÍDO
 **Nota Multi-Tenant:** Todas as tabelas devem ter `organization_id` para isolamento de dados
 
 ---
@@ -50,9 +57,11 @@
 ## 📦 Fase 1: Setup & Estrutura Base
 
 ### ⬜ Task 1.1: Inicializar projeto Expo com TypeScript e NativeWind
+
 **Descrição:** Configurar estrutura base do projeto com dependências necessárias.
 
 **Subtarefas:**
+
 - [ ] Verificar se projeto Expo já existe (existente em workspace)
 - [ ] Instalar dependências: TypeScript, NativeWind, TailwindCSS
 - [ ] Configurar `tsconfig.json` com tipagem estrita
@@ -66,9 +75,11 @@
 ---
 
 ### ⬜ Task 1.2: Configurar Supabase Client e tipos TypeScript (Multi-Tenant)
+
 **Descrição:** Criar cliente Supabase com tipagem automática das tabelas e suporte a multi-tenant.
 
 **Subtarefas:**
+
 - [ ] Instalar `@supabase/supabase-js`
 - [ ] Criar arquivo `src/services/supabase.ts` com inicialização do cliente
 - [ ] Gerar tipos TypeScript do banco com `supabase gen types typescript`
@@ -87,9 +98,11 @@
 ---
 
 ### ⬜ Task 1.3: Criar sistema de cache híbrido (Local/Cloud/API) com Multi-Tenant
+
 **Descrição:** Implementar helper de fetch com estratégia de cache respeitando isolamento de dados.
 
 **Subtarefas:**
+
 - [ ] Instalar `@react-native-async-storage/async-storage`
 - [ ] Criar hook `useLocalStorage.ts` para AsyncStorage com namespace por `organization_id`
 - [ ] Criar service `wordService.ts` com lógica de cache:
@@ -112,9 +125,11 @@
 ## 🎨 Fase 2: Componentes Core
 
 ### ⬜ Task 2.1: Criar componente Flashcard com animação de flip
+
 **Descrição:** Implementar componente visual do flashcard com interações.
 
 **Subtarefas:**
+
 - [ ] Criar componente `FlashCard.tsx` (PascalCase)
 - [ ] Implementar props TypeScript (word, onFeedback)
 - [ ] Adicionar animação de flip com React Native Reanimated (ou CSS)
@@ -136,9 +151,11 @@
 ---
 
 ### ⬜ Task 2.2: Implementar player de áudio para pronúncia
+
 **Descrição:** Criar player de áudio para reproduzir a pronúncia da palavra.
 
 **Subtarefas:**
+
 - [ ] Instalar `expo-av` para áudio
 - [ ] Criar componente `AudioButton.tsx` reutilizável
 - [ ] Implementar lógica para carregar áudio via URL
@@ -153,9 +170,11 @@
 ---
 
 ### ⬜ Task 2.3: Criar lógica de feedback e atualização de score
+
 **Descrição:** Implementar sistema de pontuação e progresso do usuário.
 
 **Subtarefas:**
+
 - [ ] Criar hook `useFlashcardProgress.ts` para gerenciar estado
 - [ ] Implementar função de registrar acerto/erro no Supabase
 - [ ] Criar regra de "3 acertos = Mastered"
@@ -172,9 +191,11 @@
 ## 📊 Fase 3: Dashboard & PWA
 
 ### ⬜ Task 3.1: Criar tela de estatísticas com progresso CEFR
+
 **Descrição:** Implementar dashboard de progresso do usuário.
 
 **Subtarefas:**
+
 - [ ] Criar tela `DashboardScreen.tsx`
 - [ ] Implementar widget de "Palavras aprendidas hoje"
 - [ ] Implementar widget de "Palavras aprendidas esta semana"
@@ -190,9 +211,11 @@
 ---
 
 ### ⬜ Task 3.2: Configurar app.json para PWA
+
 **Descrição:** Preparar aplicação para modo Web Progressive App.
 
 **Subtarefas:**
+
 - [ ] Atualizar `app.json` com nome, descrição, ícones
 - [ ] Criar ícones para PWA (192x192, 512x512)
 - [ ] Configurar `web/favicon.ico`
@@ -208,9 +231,11 @@
 ---
 
 ### ⬜ Task 3.3: Implementar autenticação com Supabase Auth (Multi-Tenant)
+
 **Descrição:** Adicionar sistema de login/signup do usuário com suporte a multi-tenant.
 
 **Subtarefas:**
+
 - [ ] Instalar `@supabase/auth-js`
 - [ ] Criar tela de Login (email + senha)
 - [ ] Criar tela de Sign Up (email + senha + confirmação + seleção de organização)
@@ -232,9 +257,11 @@
 ## 🚀 Fase 4: Refinamento & Deploy
 
 ### ⬜ Task 4.1: Otimizar performance e offline-first
+
 **Descrição:** Garantir que o app funcione bem offline e tenha bom desempenho.
 
 **Subtarefas:**
+
 - [ ] Implementar sincronização de dados quando internet retorna
 - [ ] Otimizar queries do Supabase
 - [ ] Adicionar lazy loading de componentes
@@ -249,9 +276,11 @@
 ---
 
 ### ⬜ Task 4.2: Testes unitários e de integração
+
 **Descrição:** Criar suite de testes automatizados.
 
 **Subtarefas:**
+
 - [ ] Instalar Jest + React Native Testing Library
 - [ ] Criar testes para componentes principais
 - [ ] Criar testes para services (cache, API)
@@ -265,9 +294,11 @@
 ---
 
 ### ⬜ Task 4.3: Deploy e documentação
+
 **Descrição:** Publicar aplicação e documentar código.
 
 **Subtarefas:**
+
 - [ ] Deploy no Vercel ou Netlify para PWA
 - [ ] Deploy no Expo GO para mobile
 - [ ] Criar documentação README completa
@@ -299,6 +330,7 @@
 ---
 
 ## 🎯 Próximas Ações
+
 1. ✅ Ler .ai_instructions.md e prd.md
 2. ⏳ **Task 0.1:** Configurar Supabase para o LexiCard
 3. ⏳ **Task 0.2:** Criar schema do banco de dados
