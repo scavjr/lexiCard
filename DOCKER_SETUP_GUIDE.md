@@ -14,18 +14,21 @@
 ## 🧪 Teste Local (5 min)
 
 ### 1. Verificar Docker instalado
+
 ```bash
 docker --version
 docker-compose --version
 ```
 
 ### 2. Build da imagem
+
 ```bash
 cd d:\particular\computacao\Desenvolvimento\projetosTypescript\lexicard
 docker build -t lexicard:latest .
 ```
 
 **Esperado:**
+
 - ✅ Build bem-sucedido
 - ✅ Imagem criada (veja com `docker images`)
 
@@ -42,10 +45,12 @@ docker-compose up -d
 ```
 
 **Esperado:**
+
 - ✅ Container inicia
 - ✅ Porta 3000 mapeada para localhost
 
 ### 4. Testar acesso
+
 ```bash
 # No navegador
 http://localhost:3000
@@ -55,6 +60,7 @@ curl -I http://localhost:3000
 ```
 
 **Esperado:**
+
 ```
 HTTP/1.1 200 OK
 Content-Type: text/html
@@ -62,6 +68,7 @@ Cache-Control: no-cache, no-store, must-revalidate
 ```
 
 ### 5. Verificar logs
+
 ```bash
 # Ver logs do container
 docker-compose logs -f web
@@ -71,16 +78,19 @@ docker logs lexicard-web
 ```
 
 ### 6. Verificar service worker
+
 ```bash
 curl http://localhost:3000/service-worker.js
 curl http://localhost:3000/manifest.json
 ```
 
 **Esperado:**
+
 - ✅ Ambos retornam 200 OK
 - ✅ Sem cache headers (no-cache)
 
 ### 7. Parar containers
+
 ```bash
 docker-compose down
 
@@ -90,25 +100,27 @@ docker-compose down -v
 
 ## 📊 Checklist
 
-| Item | Status |
-|------|--------|
-| Dockerfile criado | ✅ |
-| docker-compose.yml criado | ✅ |
-| Nginx config criado | ✅ |
-| .env.production.example criado | ✅ |
-| Build funciona localmente | ⏳ A testar |
-| Container inicia | ⏳ A testar |
-| Porta 3000 acessível | ⏳ A testar |
-| Service Worker servido | ⏳ A testar |
-| Health check passando | ⏳ A testar |
+| Item                           | Status      |
+| ------------------------------ | ----------- |
+| Dockerfile criado              | ✅          |
+| docker-compose.yml criado      | ✅          |
+| Nginx config criado            | ✅          |
+| .env.production.example criado | ✅          |
+| Build funciona localmente      | ⏳ A testar |
+| Container inicia               | ⏳ A testar |
+| Porta 3000 acessível           | ⏳ A testar |
+| Service Worker servido         | ⏳ A testar |
+| Health check passando          | ⏳ A testar |
 
 ## 🔧 Troubleshooting
 
 ### Build falha com "npm: not found"
+
 - **Causa:** Node.js não instalado na imagem
 - **Solução:** Verificar `FROM node:18-alpine` no Dockerfile
 
 ### Port 3000 já está em uso
+
 ```bash
 # Mudar porta em docker-compose.yml
 ports:
@@ -116,6 +128,7 @@ ports:
 ```
 
 ### Container não inicia
+
 ```bash
 # Ver erro detalhado
 docker-compose logs web
@@ -125,6 +138,7 @@ docker inspect --format='{{json .State.Health}}' lexicard-web | jq
 ```
 
 ### Service Worker não servido
+
 - Verificar se `/etc/nginx/html/service-worker.js` existe
 - Checar logs Nginx: `/var/log/nginx/error.log`
 

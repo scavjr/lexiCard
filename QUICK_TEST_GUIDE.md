@@ -6,12 +6,11 @@
 
 1. **Abrir Chrome DevTools**
    - Pressione `F12`
-   
 2. **Ir para Application → Manifest**
    - Na aba esquerda: `Application` (Chrome) ou `Storage` (Firefox)
    - Selecione `Manifest`
-   
 3. **Verificar Metadados**
+
    ```
    ✅ Name: "LexiCard - Aprenda Vocabulário"
    ✅ Short Name: "LexiCard"
@@ -118,6 +117,7 @@
 ### ✅ Teste 5: Instalação PWA (Opcional - 1 min)
 
 #### **Desktop (Chrome/Edge):**
+
 1. Abrir a app em http://localhost:8081
 2. Olhar para a **address bar** (onde escreve URL)
 3. Deve aparecer **ícone de instalação** (depende do navegador):
@@ -130,6 +130,7 @@
    - ✅ Abre em modo standalone (sem barra de endereço)
 
 #### **Mobile (Android Chrome):**
+
 1. Abrir em https://localhost:8081 (requer HTTPS em prod)
 2. Menu (⋮) no canto superior direito
 3. Selecionar "Instalar app"
@@ -142,32 +143,36 @@
 
 ## 📋 Checklist de Testes
 
-| Teste | Resultado | Status |
-|-------|-----------|--------|
-| Manifest metadados | Aparecem corretamente | ⏳ A fazer |
-| Ícones no manifest | 4 ícones aparecem | ⏳ A fazer |
-| Service Worker | "activated and running" | ⏳ A fazer |
-| Caches | 3 caches em Cache Storage | ⏳ A fazer |
-| Offline mode | Página carrega do cache | ⏳ A fazer |
-| Instalação | Ícone/menu de install | ⏳ A fazer |
+| Teste              | Resultado                 | Status     |
+| ------------------ | ------------------------- | ---------- |
+| Manifest metadados | Aparecem corretamente     | ⏳ A fazer |
+| Ícones no manifest | 4 ícones aparecem         | ⏳ A fazer |
+| Service Worker     | "activated and running"   | ⏳ A fazer |
+| Caches             | 3 caches em Cache Storage | ⏳ A fazer |
+| Offline mode       | Página carrega do cache   | ⏳ A fazer |
+| Instalação         | Ícone/menu de install     | ⏳ A fazer |
 
 ---
 
 ## 🔍 Troubleshooting Rápido
 
 ### Manifest não aparece em DevTools
+
 - **Solução:** Fazer hard refresh `Ctrl+Shift+R`
 - **Verificar:** `<link rel="manifest" href="/manifest.json">` em index.html
 
 ### Service Worker não aparece
+
 - **Solução:** Fazer hard refresh `Ctrl+Shift+R`
 - **Console:** Digitar `navigator.serviceWorker.getRegistrations()` e ver resultado
 
 ### Página não carrega offline
+
 - **Verificar:** Se offline indicator está visível (vermelho no topo)
 - **Console:** Abrir F12 → Console e procurar por erros
 
 ### Ícones não aparecem no manifest
+
 - **Solução:** Verificar se `/icons/*.png` existem (pasta public/icons/)
 - **Path:** Deve ser absoluto `/icons/` não relativo `./icons/`
 
@@ -185,8 +190,9 @@
 ## 🎬 Próxima Ação
 
 Após completar os 5 testes acima:
+
 1. ✅ Testar offline
-2. ✅ Testar instalação  
+2. ✅ Testar instalação
 3. ➜ Partir para **Task 4.1: Docker Configuration**
 
 ---
