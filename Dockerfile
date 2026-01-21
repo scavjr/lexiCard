@@ -1,25 +1,35 @@
-# Runtime stage - Nginx to serve application
+# Build stage - gera bundle web Expo
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+
+# Dependências
+COPY package*.json ./
+RUN npm ci
+
+# Código-fonte
+COPY . .
+
+# Build Expo Web (gera dist/)
+RUN npm run build
+
+# Runtime stage - Nginx servindo dist
 FROM nginx:alpine
 
-# Copy Nginx config
+# Config Nginx
 COPY nginx.conf /etc/nginx/nginx.conf
 COPY nginx-default.conf /etc/nginx/conf.d/default.conf
 
-# Create directories
+# Diretórios necessários
 RUN mkdir -p /var/log/nginx /usr/share/nginx/html
 
-# Copy public folder (landing page, service worker, manifest, icons)
-COPY public/ /usr/share/nginx/html/
-
-# Ensure index.html exists
-RUN test -f /usr/share/nginx/html/index.html || (echo "ERROR: index.html not found" && exit 1)
+# Copia bundle gerado
+COPY --from=builder /app/dist/ /usr/share/nginx/html/
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
     CMD wget --quiet --tries=1 --spider http://localhost/ || exit 1
 
-# Expose port
 EXPOSE 80
 
-# Start Nginx
 CMD ["nginx", "-g", "daemon off;"]
