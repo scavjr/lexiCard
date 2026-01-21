@@ -20,6 +20,16 @@
 **Tempo estimado:** 30 minutos
 **Documentação:** [OCEAN_DIGITAL_DEPLOY.md](OCEAN_DIGITAL_DEPLOY.md)
 
+### 📊 Progresso de Seed de Palavras
+
+**Status:** 🟡 EM PROGRESSO - Abordagem Híbrida Gratuita (Task 1.5)
+
+- **Dia 1:** ✅ Concluído com 86 palavras inseridas
+- **Progresso Total:** 86/10.000 palavras (0.86%)
+- **Próximo:** Expandir lista para 1.000+ palavras (Dias 2-10)
+- **Comando:** `npm run seed:1k:day1` (pronto para dias 2-10)
+- **RLS:** Temporariamente desabilitado (re-habilitar antes de produção)
+
 ---
 
 ## Status das Tarefas
@@ -109,6 +119,54 @@
 **Resultado:** Zero redundância (palavras globais 1x) + isolamento mantido (org-specific customizações)
 
 **Status:** ✅ CONCLUÍDO
+
+---
+
+### 🟡 Task 1.5: Seed de 10k palavras (1.000 por dia) - Abordagem Híbrida Gratuita
+
+**Descrição:** Popular `words_global` com 10.000 palavras em inglês usando múltiplas fontes gratuitas (DictionaryAPI.dev + Wiktionary + lista curada). Estratégia: 1.000 palavras por dia durante 10 dias.
+
+**Estrutura de Dados:**
+
+```json
+{
+  "word": "hello",
+  "definition": "A greeting or expression of goodwill",
+  "audio_url": "https://...",
+  "cefr_level": "A1",
+  "frequency_score": 9.8
+}
+```
+
+**Subtarefas Dia 1:**
+
+- [x] Criar script `scripts/seed-1k-words.js` (Node.js puro)
+- [x] Função `loadCuratedList()` - Carregar 86 palavras curadas com CEFR + frequency
+- [x] Implementar deduplicação (remover palavras duplicadas)
+- [x] Migração: Adicionar `cefr_level` e `frequency_score` a `words_global`
+- [x] Desabilitar RLS temporariamente em `words_global` para seed
+- [x] Usar Supabase REST API diretamente para inserir em batch (upsert)
+- [x] Log detalhado: quantas palavras adicionadas, zero duplicatas
+- [x] Executar: `npm run seed:1k:day1`
+- [x] Validar no dashboard Supabase: 86 palavras inseridas em `words_global`
+
+**Status Dia 1:** ✅ 86 palavras inseridas com sucesso (8.6% do alvo de 1.000)
+
+**Próximos Passos (Dias 2-10):**
+
+- [ ] Expandir `seeds/words-1k.json` de 30 para 1.000+ palavras
+- [ ] Modificar script para carregar de JSON ao invés de hardcoded array
+- [ ] Dia 2: Executar com batch de 1.000 palavras (total: 1.086)
+- [ ] Dia 3-10: Executar para atingir 10.000 palavras totais
+- [ ] Habilitar RLS novamente após seed completo
+- [ ] Validação: Garantir zero duplicatas com constraint UNIQUE
+
+**Requisitos:** Task 1.4 concluída, acesso ao MCP Supabase
+**Prioridade:** 🔴 CRÍTICA
+**Tempo Dia 1:** ✅ 2 horas (concluído)
+**Tempo Dias 2-10:** ~1 hora por dia
+**Custo:** Totalmente gratuito (APIs públicas + hardcoded list)
+**Status:** 🟡 EM PROGRESSO (86/10.000 palavras)
 
 ---
 

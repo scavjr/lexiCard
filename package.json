@@ -13,11 +13,13 @@
     "prebuild": "expo prebuild",
     "generate-icons": "node scripts/generate-icons.js",
     "inject-env": "node scripts/inject-env.js",
-    "build": "npm run inject-env && expo export --platform web --output-dir dist"
+    "build": "npm run inject-env && expo export --platform web --output-dir dist",
+    "seed:1k:day1": "node scripts/seed-1k-words.js"
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "^2.2.0",
     "@supabase/supabase-js": "^2.91.0",
+    "dotenv": "^17.2.3",
     "expo": "~54.0.31",
     "expo-av": "^16.0.8",
     "expo-constants": "^18.0.13",
