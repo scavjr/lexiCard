@@ -1,6 +1,3 @@
-Need to install the following packages:
-supabase@2.72.8
-Ok to proceed? (y) 
 export type Json =
   | string
   | number
@@ -164,17 +161,10 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "user_progress_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "user_progress_word_id_fkey"
             columns: ["word_id"]
             isOneToOne: false
-            referencedRelation: "words"
+            referencedRelation: "words_global"
             referencedColumns: ["id"]
           },
         ]

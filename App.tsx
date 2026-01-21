@@ -2,7 +2,7 @@ import { StatusBar } from "expo-status-bar";
 import { useState } from "react";
 import { ActivityIndicator, View } from "react-native";
 import { AuthProvider, useAuth } from "./src/store/AuthContext";
-import { FlashCardDemo } from "./src/components/FlashCard.demo";
+import AppNavigator from "./src/navigation/AppNavigator";
 import LoginScreen from "./src/screens/LoginScreen";
 import SignUpScreen from "./src/screens/SignUpScreen";
 
@@ -42,10 +42,10 @@ function AppContent() {
     );
   }
 
-  // Se autenticado, mostrar o app
+  // Se autenticado, mostrar o app com navegação
   return (
     <>
-      <FlashCardDemo
+      <AppNavigator
         userId={userId || ""}
         organizationId={organizationId || ""}
       />
