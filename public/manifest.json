@@ -1,0 +1,82 @@
+{
+  "name": "LexiCard - Aprenda Vocabulário",
+  "short_name": "LexiCard",
+  "description": "Aprenda vocabulário em inglês com flashcards interativos. Suporte offline-first com sincronização em nuvem.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "dir": "ltr",
+  "lang": "pt-BR",
+  "background_color": "#F8FAFC",
+  "theme_color": "#4F46E5",
+  "categories": ["education", "productivity"],
+  "screenshots": [
+    {
+      "src": "/icons/screenshot-1.png",
+      "sizes": "540x720",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Dashboard - Acompanhe seu progresso em CEFR"
+    },
+    {
+      "src": "/icons/screenshot-2.png",
+      "sizes": "960x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Flashcard - Aprenda palavras com pronúncia"
+    }
+  ],
+  "icons": [
+    {
+      "src": "/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-192x192-maskable.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512x512-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Aprender Palavras",
+      "short_name": "Aprender",
+      "description": "Abrir tela de flashcards",
+      "url": "/flashcard",
+      "icons": [{ "src": "/icons/shortcut-192x192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Ver Progresso",
+      "short_name": "Progresso",
+      "description": "Visualizar dashboard com estatísticas CEFR",
+      "url": "/dashboard",
+      "icons": [{ "src": "/icons/shortcut-192x192.png", "sizes": "192x192" }]
+    }
+  ],
+  "share_target": {
+    "action": "/share",
+    "method": "POST",
+    "enctype": "multipart/form-data",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url"
+    }
+  }
+}

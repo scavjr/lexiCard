@@ -30,26 +30,61 @@
       "versionCode": 1
     },
     "web": {
-      "favicon": "./assets/favicon.png",
+      "favicon": "/icons/favicon-32x32.png",
       "bundler": "metro",
       "output": "single",
-      "name": "LexiCard",
+      "name": "LexiCard - Aprenda Vocabulário",
       "shortName": "LexiCard",
-      "description": "Aprenda vocabulário com flashcards",
+      "description": "Aprenda vocabulário em inglês com flashcards interativos",
       "dir": "ltr",
       "lang": "pt-BR",
       "scope": "/",
       "startUrl": "/",
       "display": "standalone",
-      "orientation": "portrait",
+      "orientation": "portrait-primary",
       "backgroundColor": "#F8FAFC",
       "themeColor": "#4F46E5",
       "categories": ["education", "productivity"],
       "screenshots": [
         {
-          "src": "./assets/icon.png",
+          "src": "/icons/screenshot-1.png",
+          "sizes": "540x720",
+          "type": "image/png",
+          "form_factor": "narrow",
+          "label": "Dashboard - Acompanhe seu progresso em CEFR"
+        },
+        {
+          "src": "/icons/screenshot-2.png",
+          "sizes": "960x720",
+          "type": "image/png",
+          "form_factor": "wide",
+          "label": "Flashcard - Aprenda palavras com pronúncia"
+        }
+      ],
+      "icons": [
+        {
+          "src": "/icons/icon-192x192.png",
           "sizes": "192x192",
-          "type": "image/png"
+          "type": "image/png",
+          "purpose": "any"
+        },
+        {
+          "src": "/icons/icon-192x192-maskable.png",
+          "sizes": "192x192",
+          "type": "image/png",
+          "purpose": "maskable"
+        },
+        {
+          "src": "/icons/icon-512x512.png",
+          "sizes": "512x512",
+          "type": "image/png",
+          "purpose": "any"
+        },
+        {
+          "src": "/icons/icon-512x512-maskable.png",
+          "sizes": "512x512",
+          "type": "image/png",
+          "purpose": "maskable"
         }
       ]
     },

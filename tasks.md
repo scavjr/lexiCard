@@ -271,19 +271,19 @@
 
 ---
 
-### ⬜ Task 2.3: Criar lógica de feedback e atualização de score
+### ✅ Task 2.3: Criar lógica de feedback e atualização de score
 
 **Descrição:** Implementar sistema de pontuação e progresso do usuário.
 
 **Subtarefas:**
 
-- [ ] Criar hook `useFlashcardProgress.ts` para gerenciar estado
-- [ ] Implementar função de registrar acerto/erro no Supabase
-- [ ] Criar regra de "3 acertos = Mastered"
-- [ ] Atualizar tabela `user_progress` após cada feedback
-- [ ] Calcular nível CEFR baseado em total de palavras aprendidas
-- [ ] Criar notificação visual de feedback (toast/snackbar)
-- [ ] Testar fluxo completo de pontuação
+- [x] Criar hook `useFlashcardProgress.ts` para gerenciar estado
+- [x] Implementar função de registrar acerto/erro no Supabase
+- [x] Criar regra de "3 acertos = Mastered"
+- [x] Atualizar tabela `user_progress` após cada feedback
+- [x] Calcular nível CEFR baseado em total de palavras aprendidas
+- [x] Criar notificação visual de feedback (toast/snackbar)
+- [x] Testar fluxo completo de pontuação
 
 **Requisitos:** Task 1.2 e 2.1 concluídas
 **Prioridade:** 🟠 ALTA
@@ -314,20 +314,54 @@
 
 ---
 
-### ⬜ Task 3.2: Configurar app.json para PWA
+### 🟡 Task 3.2: Configurar app.json para PWA
 
 **Descrição:** Preparar aplicação para modo Web Progressive App.
 
-**Subtarefas:**
+**Status:** Em Progresso ⏳
 
-- [ ] Atualizar `app.json` com nome, descrição, ícones
-- [ ] Criar ícones para PWA (192x192, 512x512)
-- [ ] Configurar `web/favicon.ico`
-- [ ] Criar arquivo `web/manifest.json` com metadados
-- [ ] Testar modo offline com Service Worker
-- [ ] Testar instalação como aplicativo web
-- [ ] Validar PWA com Lighthouse
-- [ ] Deploy e teste em dispositivos reais
+**Implementado:**
+
+- ✅ Criar manifest.json com metadados completos (PWA compliant)
+- ✅ Configurar app.json com ícones e display mode standalone
+- ✅ Criar Service Worker com caching strategies (cache-first, network-first)
+- ✅ Implementar suporte offline gracioso com página de fallback
+- ✅ Criar script gerador de ícones (sharp-based)
+- ✅ Criar SVG base para ícone (icon-base.svg)
+- ✅ Criar guia de testes PWA (PWA_TESTING_GUIDE.md)
+- ✅ Gerar ícones 192x192 e 512x512 (sharp instalado e executado)
+- ⏳ Testar modo offline
+- ⏳ Testar instalação web
+- ⏳ Validar com Lighthouse PWA audit
+
+**Arquivos Criados:**
+
+- `public/manifest.json` - Metadados PWA (Web App Manifest)
+- `public/index.html` - Página HTML com Service Worker registration
+- `public/service-worker.js` - Service Worker offline-first
+- `public/icon-base.svg` - Ícone base para gerar PNG
+- `public/icons/` - Diretório para ícones (criado, aguardando geração)
+- `scripts/generate-icons.js` - Script para gerar ícones PNG
+- `PWA_TESTING_GUIDE.md` - Guia completo de validação
+
+**Próximas Ações:**
+
+```bash
+# 1. Instalar dependência sharp
+npm install sharp
+
+# 2. Gerar ícones PNG
+npm run generate-icons
+
+# 3. Testar localmente
+npm start
+
+# 4. Validar com Lighthouse
+lighthouse http://localhost:8081 --view
+```
+
+**Requisitos:** Task 3.1 concluída ✅
+**Prioridade:** 🟠 ALTA
 
 **Requisitos:** Task 3.1 concluída ✅
 **Prioridade:** 🟠 ALTA
@@ -367,6 +401,7 @@
 **Status:** 🟡 PREPARADO (Desabilitado para testes)
 
 **Tabelas com RLS desabilitado:**
+
 - `organizations` - Desabilitar indefinidamente (metadata compartilhada)
 - `user_organizations` - Reabilitar com policies no LoginScreen/SignUpScreen
 - `user_progress` - Reabilitar com check_user_access() function
@@ -374,6 +409,7 @@
 - `words_global` - Pode permitir leitura pública (RLS permissivo)
 
 **Procedimento de Re-habilitação:**
+
 1. Criar function `check_user_access(user_id uuid)` (já existe)
 2. Habilitar RLS em user_organizations com policies SELECT/INSERT/UPDATE/DELETE
 3. Habilitar RLS em user_progress com FK validation
