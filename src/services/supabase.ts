@@ -5,21 +5,18 @@
 
 import { createClient } from "@supabase/supabase-js";
 import { Database } from "@/types/database";
-import Constants from "expo-constants";
+import { ENV_CONFIG } from "@/config/env.generated";
 
-// Debug: Verificar se as variáveis estão sendo injetadas
-console.log("EXPO CONFIG:", Constants.expoConfig);
-console.log("EXTRA:", Constants.expoConfig?.extra);
+// Usa o arquivo gerado pelo script inject-env.js (valores injetados no build)
+const SUPABASE_URL = ENV_CONFIG.SUPABASE_URL;
+const SUPABASE_ANON_KEY = ENV_CONFIG.SUPABASE_ANON_KEY;
 
-const extra = Constants.expoConfig?.extra || {};
-
-const SUPABASE_URL = extra.SUPABASE_URL;
-const SUPABASE_ANON_KEY = extra.SUPABASE_ANON_KEY;
+// Debug temporário - remover depois
+console.log("SUPABASE_URL exists:", !!SUPABASE_URL);
+console.log("SUPABASE_ANON_KEY exists:", !!SUPABASE_ANON_KEY);
 
 if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-  throw new Error(
-    "Supabase credentials not found. Check Expo extra config."
-  );
+  console.error("Supabase credentials not found. Check environment variables.");
 }
 
 /**

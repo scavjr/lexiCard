@@ -12,7 +12,8 @@
     "format": "prettier --write \"src/**/*.{ts,tsx,css}\"",
     "prebuild": "expo prebuild",
     "generate-icons": "node scripts/generate-icons.js",
-    "build": "expo export --platform web --output-dir dist"
+    "inject-env": "node scripts/inject-env.js",
+    "build": "npm run inject-env && expo export --platform web --output-dir dist"
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "^2.2.0",
