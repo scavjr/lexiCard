@@ -8,7 +8,8 @@ export default {
     icon: "./assets/icon.png",
     userInterfaceStyle: "light",
     newArchEnabled: true,
-    description: "Aprenda vocabulário em inglês com flashcards interativos. Suporte offline-first com sincronização em nuvem.",
+    description:
+      "Aprenda vocabulário em inglês com flashcards interativos. Suporte offline-first com sincronização em nuvem.",
     splash: {
       image: "./assets/splash-icon.png",
       resizeMode: "contain",
