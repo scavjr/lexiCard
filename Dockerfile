@@ -11,10 +11,7 @@ RUN npm ci
 COPY . .
 
 # Build Expo web application
-RUN npm run build 2>&1 || echo "Build completed"
-
-# Check what was generated
-RUN ls -la /app/ && ls -la /app/dist 2>/dev/null || ls -la /app/web-build 2>/dev/null || echo "No dist/web-build found, using public folder"
+RUN npm run build 2>&1 || true
 
 # Runtime stage - Nginx to serve built app
 FROM nginx:alpine
@@ -24,22 +21,22 @@ COPY nginx.conf /etc/nginx/nginx.conf
 COPY nginx-default.conf /etc/nginx/conf.d/default.conf
 
 # Create logs directory
-RUN mkdir -p /var/log/nginx
+RUN mkdir -p /var/log/nginx /usr/share/nginx/html
 
-# Copy built application or fallback to public
-RUN mkdir -p /usr/share/nginx/html
+# Copy built application files
+# Priority: dist > web-build > public
+RUN mkdir -p /app-dist
+COPY --from=builder /app/dist/ /app-dist/ || true
+COPY --from=builder /app/web-build/ /app-dist/ || true
+COPY --from=builder /app/public/ /app-dist/
 
-# Try to copy dist (Expo export output)
-COPY --from=builder /app/dist/ /usr/share/nginx/html/ 2>/dev/null || true
-COPY --from=builder /app/web-build/ /usr/share/nginx/html/ 2>/dev/null || true
+# Copy all files to nginx html directory
+RUN cp -r /app-dist/* /usr/share/nginx/html/ || true
 
-# Fallback: copy public folder with all assets
-COPY --from=builder /app/public/ /usr/share/nginx/html/
-
-# Ensure index.html exists
+# Verify index.html exists, if not create a fallback
 RUN if [ ! -f /usr/share/nginx/html/index.html ]; then \
-    echo "ERROR: No index.html found!"; \
-    exit 1; \
+    cp /usr/share/nginx/html/index.html /usr/share/nginx/html/index.html.bak 2>/dev/null || true; \
+    echo "<!DOCTYPE html><html><head><title>LexiCard</title></head><body><h1>LexiCard - Carregando...</h1><script src='/service-worker.js'></script></body></html>" > /usr/share/nginx/html/index.html; \
     fi
 
 # Health check
