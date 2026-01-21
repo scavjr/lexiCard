@@ -7,6 +7,10 @@ import { createClient } from "@supabase/supabase-js";
 import { Database } from "@/types/database";
 import Constants from "expo-constants";
 
+// Debug: Verificar se as variáveis estão sendo injetadas
+console.log("EXPO CONFIG:", Constants.expoConfig);
+console.log("EXTRA:", Constants.expoConfig?.extra);
+
 const extra = Constants.expoConfig?.extra || {};
 
 const SUPABASE_URL = extra.SUPABASE_URL;
