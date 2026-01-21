@@ -11,7 +11,8 @@
     "lint": "eslint . --ext .ts,.tsx",
     "format": "prettier --write \"src/**/*.{ts,tsx,css}\"",
     "prebuild": "expo prebuild",
-    "generate-icons": "node scripts/generate-icons.js"
+    "generate-icons": "node scripts/generate-icons.js",
+    "build": "echo 'Build not needed for static PWA - assets already in public/' && exit 0"
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "^2.2.0",

@@ -1,5 +1,5 @@
 # Build stage
-FROM node:18-alpine AS builder
+FROM node:20-alpine AS builder
 
 WORKDIR /app
 
@@ -39,7 +39,7 @@ RUN if [ ! -f /usr/share/nginx/html/index.html ]; then \
     fi
 
 # Copiar pasta public (manifest.json, service-worker.js, etc)
-COPY public /usr/share/nginx/html/
+COPY public/ /usr/share/nginx/html/
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
