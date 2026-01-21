@@ -463,6 +463,25 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
 
+  contentContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 16,
+  },
+
+  exampleText: {
+    fontSize: 14,
+    fontStyle: "normal",
+    lineHeight: 20,
+  },
+
+  pronunciationContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 16,
+  },
+
   wordContainer: {
     alignItems: "center",
     justifyContent: "center",

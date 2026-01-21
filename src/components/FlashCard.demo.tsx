@@ -6,6 +6,9 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, ScrollView, StyleSheet, Alert } from "react-native";
 import FlashCard from "@/components/FlashCard";
+import Toast from "@/components/Toast";
+import { useFlashcardProgress } from "@/hooks/useFlashcardProgress";
+import { useToast } from "@/hooks/useToast";
 
 interface CardData {
   word: string;
@@ -18,11 +21,22 @@ interface CardData {
 
 /**
  * Demo FlashCard - Tela de exemplo com múltiplos cards
+ * Incluindo progresso e feedback visual
  */
 export const FlashCardDemo: React.FC = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [cards, setCards] = useState<CardData[]>([]);
   const [loading, setLoading] = useState(true);
+  const { toast, success, error: showError } = useToast();
+
+  // Demo: usar ID fixo para testar (em produção viria de context)
+  const demoUserId = "demo-user-123";
+  const demoOrganizationId = "demo-org-456";
+
+  const { recordCorrect, recordIncorrect } = useFlashcardProgress(
+    demoOrganizationId,
+    demoUserId,
+  );
 
   // Palavras para buscar da API
   const wordsToFetch = [
@@ -151,14 +165,36 @@ export const FlashCardDemo: React.FC = () => {
 
   const current = cards[currentIndex];
 
-  const handleCorrect = () => {
-    Alert.alert("✓ Acertou!", `"${current.word}" foi registrado como acertado`);
-    moveToNext();
+  const handleCorrect = async () => {
+    const result = await recordCorrect(current.word);
+
+    if (result.success) {
+      success(result.message);
+
+      if (result.isMastered) {
+        Alert.alert(
+          "🎉 Parabéns!",
+          `Você dominou a palavra "${current.word}"!\n\nProgresso: ${result.stats?.masteredWords}/${result.stats?.totalWords} palavras`,
+        );
+      }
+
+      // Aguardar um pouco antes de passar para o próximo card
+      setTimeout(() => moveToNext(), 1500);
+    } else {
+      showError(result.message);
+    }
   };
 
-  const handleIncorrect = () => {
-    Alert.alert("✗ Errou!", `"${current.word}" foi registrado como erro`);
-    moveToNext();
+  const handleIncorrect = async () => {
+    const result = await recordIncorrect(current.word);
+
+    if (result.success) {
+      showError(result.message);
+      // Aguardar um pouco antes de passar para o próximo card
+      setTimeout(() => moveToNext(), 1500);
+    } else {
+      showError(result.message);
+    }
   };
 
   const handleAudioPlay = () => {
@@ -185,6 +221,15 @@ export const FlashCardDemo: React.FC = () => {
 
   return (
     <ScrollView style={styles.container}>
+      {/* Toast Notification */}
+      {toast.visible && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          duration={3000}
+          onDismiss={() => {}}
+        />
+      )}
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.title}>Aprenda Vocabulário</Text>
