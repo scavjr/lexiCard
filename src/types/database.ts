@@ -1,9 +1,6 @@
-/**
- * Tipos gerados automaticamente do Supabase
- * Execute `supabase gen types typescript` para regenerar
- * Inclui: flashcard_sessions, organizations, user_progress, users, words, words_global
- */
-
+Need to install the following packages:
+supabase@2.72.8
+Ok to proceed? (y) 
 export type Json =
   | string
   | number
@@ -13,6 +10,8 @@ export type Json =
   | Json[]
 
 export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "14.1"
   }
@@ -89,6 +88,41 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      user_organizations: {
+        Row: {
+          created_at: string | null
+          id: string
+          organization_id: string
+          role: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          organization_id: string
+          role?: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          organization_id?: string
+          role?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_organizations_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_progress: {
         Row: {
@@ -273,7 +307,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      check_user_access: { Args: { user_id_param: string }; Returns: boolean }
     }
     Enums: {
       [_ in never]: never

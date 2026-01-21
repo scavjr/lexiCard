@@ -54,17 +54,25 @@ export function useFlashcardProgress(
       setError(null);
 
       try {
-        // Buscar progresso atual
+        // Buscar progresso atual (usar maybeSingle para não erro em not found)
         const { data: existing, error: fetchError } = await supabase
           .from("user_progress")
           .select("*")
           .eq("user_id", userId)
           .eq("word_id", wordId)
           .eq("organization_id", organizationId)
-          .single();
+          .maybeSingle();
 
-        if (fetchError && fetchError.code !== "PGRST116") {
-          throw fetchError;
+        // Ignorar erro PGRST116 (not found) mas não ignorar recursion errors
+        if (fetchError) {
+          if (fetchError.code === "42P17") {
+            // Infinite recursion - erro de RLS
+            throw new Error(
+              "⚠️ Erro de configuração no servidor. Contacte suporte.\n\nErro: Política de segurança do banco de dados precisa de ajuste.\n\nDica: Execute 'fix_infinite_recursion.sql' no Supabase SQL Editor",
+            );
+          } else {
+            throw fetchError;
+          }
         }
 
         const acertos = (existing?.acertos || 0) + 1;
@@ -107,6 +115,7 @@ export function useFlashcardProgress(
       } catch (err) {
         const message = err instanceof Error ? err.message : "Erro ao registrar acerto";
         setError(message);
+        console.error("[recordCorrect] Error:", err);
         return {
           success: false,
           message: `Erro: ${message}`,
@@ -128,17 +137,25 @@ export function useFlashcardProgress(
       setError(null);
 
       try {
-        // Buscar progresso atual
+        // Buscar progresso atual (usar maybeSingle para não erro em not found)
         const { data: existing, error: fetchError } = await supabase
           .from("user_progress")
           .select("*")
           .eq("user_id", userId)
           .eq("word_id", wordId)
           .eq("organization_id", organizationId)
-          .single();
+          .maybeSingle();
 
-        if (fetchError && fetchError.code !== "PGRST116") {
-          throw fetchError;
+        // Ignorar erro PGRST116 (not found) mas não ignorar recursion errors
+        if (fetchError) {
+          if (fetchError.code === "42P17") {
+            // Infinite recursion - erro de RLS
+            throw new Error(
+              "⚠️ Erro de configuração no servidor. Contacte suporte.\n\nErro: Política de segurança do banco de dados precisa de ajuste.\n\nDica: Execute 'fix_infinite_recursion.sql' no Supabase SQL Editor",
+            );
+          } else {
+            throw fetchError;
+          }
         }
 
         // Apenas registrar o erro sem incrementar acertos
@@ -178,6 +195,7 @@ export function useFlashcardProgress(
       } catch (err) {
         const message = err instanceof Error ? err.message : "Erro ao registrar erro";
         setError(message);
+        console.error("[recordIncorrect] Error:", err);
         return {
           success: false,
           message: `Erro: ${message}`,

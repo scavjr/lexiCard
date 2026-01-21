@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/useToast";
 
 interface CardData {
   word: string;
+  wordId: string; // UUID para Supabase
   translation: string;
   definition?: string;
   example?: string;
@@ -19,30 +20,46 @@ interface CardData {
   audioUrl?: string;
 }
 
+interface FlashCardDemoProps {
+  userId: string;
+  organizationId: string;
+}
+
 /**
  * Demo FlashCard - Tela de exemplo com múltiplos cards
  * Incluindo progresso e feedback visual
  */
-export const FlashCardDemo: React.FC = () => {
+export const FlashCardDemo: React.FC<FlashCardDemoProps> = ({
+  userId,
+  organizationId,
+}) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [cards, setCards] = useState<CardData[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast, success, error: showError } = useToast();
 
-  // Demo: usar ID fixo para testar (em produção viria de context)
-  const demoUserId = "demo-user-123";
-  const demoOrganizationId = "demo-org-456";
-
   const { recordCorrect, recordIncorrect } = useFlashcardProgress(
-    demoOrganizationId,
-    demoUserId,
+    organizationId,
+    userId,
   );
 
-  // Palavras para buscar da API
+  // Palavras para buscar da API com UUIDs para cada palavra
   const wordsToFetch = [
-    { word: "Serendipity", translation: "Serendipidade" },
-    { word: "Ephemeral", translation: "Efêmero" },
-    { word: "Ubiquitous", translation: "Ubíquo" },
+    {
+      word: "Serendipity",
+      wordId: "550e8400-e29b-41d4-a716-446655440010",
+      translation: "Serendipidade",
+    },
+    {
+      word: "Ephemeral",
+      wordId: "550e8400-e29b-41d4-a716-446655440011",
+      translation: "Efêmero",
+    },
+    {
+      word: "Ubiquitous",
+      wordId: "550e8400-e29b-41d4-a716-446655440012",
+      translation: "Ubíquo",
+    },
   ];
 
   useEffect(() => {
@@ -50,7 +67,7 @@ export const FlashCardDemo: React.FC = () => {
       try {
         const cardsData: CardData[] = [];
 
-        for (const { word, translation } of wordsToFetch) {
+        for (const { word, wordId, translation } of wordsToFetch) {
           const response = await fetch(
             `https://api.dictionaryapi.dev/api/v2/entries/en/${word.toLowerCase()}`,
           );
@@ -105,6 +122,7 @@ export const FlashCardDemo: React.FC = () => {
 
             return {
               word,
+              wordId,
               translation,
               definition,
               example,
@@ -134,6 +152,7 @@ export const FlashCardDemo: React.FC = () => {
   const getDefaultCards = (): CardData[] => [
     {
       word: "Serendipity",
+      wordId: "550e8400-e29b-41d4-a716-446655440010",
       translation: "Serendipidade",
       definition:
         "The occurrence of events by chance in a happy or beneficial way",
@@ -144,6 +163,7 @@ export const FlashCardDemo: React.FC = () => {
     },
     {
       word: "Ephemeral",
+      wordId: "550e8400-e29b-41d4-a716-446655440011",
       translation: "Efêmero",
       definition: "Lasting for a very short time",
       example:
@@ -154,6 +174,7 @@ export const FlashCardDemo: React.FC = () => {
     },
     {
       word: "Ubiquitous",
+      wordId: "550e8400-e29b-41d4-a716-446655440012",
       translation: "Ubíquo",
       definition: "Present, appearing, or found everywhere",
       example: "Smartphones have become ubiquitous in modern society.",
@@ -166,7 +187,7 @@ export const FlashCardDemo: React.FC = () => {
   const current = cards[currentIndex];
 
   const handleCorrect = async () => {
-    const result = await recordCorrect(current.word);
+    const result = await recordCorrect(current.wordId);
 
     if (result.success) {
       success(result.message);
@@ -186,7 +207,7 @@ export const FlashCardDemo: React.FC = () => {
   };
 
   const handleIncorrect = async () => {
-    const result = await recordIncorrect(current.word);
+    const result = await recordIncorrect(current.wordId);
 
     if (result.success) {
       showError(result.message);
