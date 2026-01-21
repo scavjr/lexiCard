@@ -8,6 +8,7 @@
 ## 📋 Resumo da Tarefa
 
 Implementar tela completa de **Dashboard** com estatísticas de progresso do usuário, incluindo:
+
 - Widget de nível CEFR (grande e destacado)
 - Widgets de progresso (hoje, semana, dominadas, taxa sucesso)
 - Gráfico de progresso até próximo nível
@@ -23,15 +24,18 @@ Implementar tela completa de **Dashboard** com estatísticas de progresso do usu
 **Arquivo:** [src/screens/DashboardScreen.tsx](src/screens/DashboardScreen.tsx)
 
 **Componente Principal:**
+
 ```typescript
 <DashboardScreen userId={userId} organizationId={organizationId} />
 ```
 
 **Props:**
+
 - `userId`: string - ID do usuário logado
 - `organizationId`: string - ID da organização
 
 **Funcionalidades:**
+
 - Carrega dados do Supabase em paralelo
 - Atualiza automaticamente ao montar
 - Suporte a refresh manual (pull-to-refresh)
@@ -41,12 +45,14 @@ Implementar tela completa de **Dashboard** com estatísticas de progresso do usu
 ### 2. ✅ Implementar widget "Palavras aprendidas hoje"
 
 **Widget Verde (Emerald #10B981):**
+
 - Busca palavras com `acertos > 0` nas últimas 24h
 - Exibe número destacado em grande fonte (32px)
 - Subtítulo: "palavras aprendidas"
 - Query: filtra por `data_ultimo_acerto > hoje às 00:00`
 
 **Exemplo:**
+
 ```typescript
 // Se aprendeu 5 palavras hoje
 <Widget label="Hoje" number={5} subtitle="palavras aprendidas" />
@@ -55,11 +61,13 @@ Implementar tela completa de **Dashboard** com estatísticas de progresso do usu
 ### 3. ✅ Implementar widget "Palavras aprendidas esta semana"
 
 **Widget Laranja (Amber #F59E0B):**
+
 - Busca palavras com `acertos > 0` nos últimos 7 dias
 - Mesmo layout que widget de hoje
 - Query: filtra por `data_ultimo_acerto > 7 dias atrás`
 
 **Exemplo:**
+
 ```typescript
 // Se aprendeu 23 palavras esta semana
 <Widget label="Esta Semana" number={23} subtitle="palavras aprendidas" />
@@ -68,30 +76,34 @@ Implementar tela completa de **Dashboard** com estatísticas de progresso do usu
 ### 4. ✅ Criar gráfico de nível CEFR (A1 até C2)
 
 **Card CEFR Grande:**
+
 - Gradiente roxo (Indigo → Purple)
 - Exibe nível atual (ex: B1)
 - Mostra label completo (ex: "B1 - Intermediate")
 - Mostra total de palavras aprendidas
 
 **Componente CEFRProgressBar:**
+
 - Mostra progresso até próximo nível
 - Exemplo: "A1 (0) —▓▓▓▓▒▒▒▒ A2 (50)"
 - Texto: "Faltam 15 palavras"
 - Se em C2 (máximo), exibe mensagem especial: "🎓 Nível máximo!"
 
 **Mapeamento CEFR:**
+
 ```typescript
-A1:  0-50      (Beginner)
-A2:  50-250    (Elementary)
-B1:  250-1000  (Intermediate)
-B2:  1000-3000 (Upper-Intermediate)
-C1:  3000-8000 (Advanced)
-C2:  8000+     (Mastery)
+A1: 0 - 50(Beginner);
+A2: 50 - 250(Elementary);
+B1: 250 - 1000(Intermediate);
+B2: 1000 - 3000(Upper - Intermediate);
+C1: 3000 - 8000(Advanced);
+C2: 8000 + Mastery;
 ```
 
 ### 5. ✅ Adicionar histórico de sessões
 
 **Seção "Histórico de Sessões":**
+
 - Lista últimas 10 sessões dos últimos 30 dias
 - Cada item mostra:
   - Data formatada (pt-BR)
@@ -101,6 +113,7 @@ C2:  8000+     (Mastery)
 - Empty state se sem sessões
 
 **Exemplo:**
+
 ```
 21/01/2026  |  5 palavras aprendidas  |  [2]
 20/01/2026  |  3 palavras aprendidas  |  [1]
@@ -110,6 +123,7 @@ C2:  8000+     (Mastery)
 ### 6. ✅ Estilizar com paleta de cores do projeto
 
 **Cores Usadas:**
+
 - **Indigo (#4F46E5)**: CEFR card, progress bar
 - **Emerald (#10B981)**: Widget "Hoje"
 - **Amber (#F59E0B)**: Widget "Esta Semana"
@@ -119,6 +133,7 @@ C2:  8000+     (Mastery)
 - **Cards**: #FFFFFF (White) com shadows suaves
 
 **Design System:**
+
 - Border radius: 16px para cards, 12px para widgets
 - Shadows: Soft (elevation 2-5)
 - Font: Inter
@@ -127,6 +142,7 @@ C2:  8000+     (Mastery)
 ### 7. ✅ Implementar refresh de dados
 
 **Pull-to-Refresh (iOS/Android):**
+
 ```typescript
 <ScrollView
   refreshControl={
@@ -136,11 +152,13 @@ C2:  8000+     (Mastery)
 ```
 
 **handleRefresh:**
+
 - Roda `loadData()` novamente
 - Atualiza todos os widgets
 - Visual feedback com spinner
 
 **Auto-refresh ao Montar:**
+
 ```typescript
 useEffect(() => {
   loadData();
@@ -154,14 +172,14 @@ useEffect(() => {
 ```sql
 -- Palavras de hoje
 SELECT COUNT(*) FROM user_progress
-WHERE user_id = $1 
+WHERE user_id = $1
   AND organization_id = $2
   AND acertos > 0
   AND data_ultimo_acerto > TODAY AT 00:00
 
 -- Palavras da semana
 SELECT COUNT(*) FROM user_progress
-WHERE user_id = $1 
+WHERE user_id = $1
   AND organization_id = $2
   AND acertos > 0
   AND data_ultimo_acerto > NOW() - INTERVAL 7 DAYS
@@ -172,7 +190,7 @@ WHERE user_id = $1 AND organization_id = $2
 
 -- Sessões
 SELECT * FROM flashcard_sessions
-WHERE user_id = $1 
+WHERE user_id = $1
   AND organization_id = $2
   AND data_sessao > NOW() - INTERVAL 30 DAYS
 ORDER BY data_sessao DESC
@@ -180,6 +198,7 @@ LIMIT 10
 ```
 
 **Validação Multi-tenant:**
+
 - ✅ Todas as queries filtram por `organization_id`
 - ✅ Isolamento de dados garantido
 - ✅ User_id validado em cada query
@@ -189,6 +208,7 @@ LIMIT 10
 ## 📦 Arquivos Criados/Modificados
 
 ### Novos Arquivos:
+
 - ✅ [src/screens/DashboardScreen.tsx](src/screens/DashboardScreen.tsx) - Tela principal (480 linhas)
 - ✅ [src/screens/DashboardScreen.demo.tsx](src/screens/DashboardScreen.demo.tsx) - Demo de uso (20 linhas)
 
@@ -253,6 +273,7 @@ LIMIT 10
 ## 📊 Componentes Reutilizáveis
 
 **CEFRProgressBar:**
+
 - Aceita `ProgressStats` como prop
 - Calcula progresso dinamicamente
 - Mostra próximo nível e distância
@@ -263,10 +284,12 @@ LIMIT 10
 ## 🎯 Integração com Outras Tarefas
 
 **Depende de:**
+
 - ✅ Task 2.3: `useFlashcardProgress` hook
 - ✅ Task 1.4: Tabelas `user_progress` e `flashcard_sessions` no Supabase
 
 **Será usado por:**
+
 - 📄 Task 3.2: PWA manifest e favicon
 - 📄 Task 3.3: Rota de dashboard autenticada
 
@@ -285,11 +308,13 @@ LIMIT 10
 ## 🚀 Próximos Passos
 
 **Task 3.2:** Configurar app.json para PWA
+
 - Setup de ícones e manifest
 - Service worker para offline
 - Cache strategies
 
 **Task 3.3:** Implementar autenticação Supabase Auth
+
 - Login/Signup screens
 - AuthContext com organização
 - Persistência de sessão
