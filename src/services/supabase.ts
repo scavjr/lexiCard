@@ -5,13 +5,16 @@
 
 import { createClient } from "@supabase/supabase-js";
 import { Database } from "@/types/database";
+import Constants from "expo-constants";
 
-const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL || "";
-const SUPABASE_ANON_KEY = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || "";
+const extra = Constants.expoConfig?.extra || {};
+
+const SUPABASE_URL = extra.SUPABASE_URL;
+const SUPABASE_ANON_KEY = extra.SUPABASE_ANON_KEY;
 
 if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-  console.error(
-    "Supabase credentials not found. Check your .env.local file."
+  throw new Error(
+    "Supabase credentials not found. Check Expo extra config."
   );
 }
 

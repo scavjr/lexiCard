@@ -2,6 +2,10 @@
   "expo": {
     "name": "LexiCard - Aprenda Vocabulário",
     "slug": "lexicard",
+    "extra": {
+      "SUPABASE_URL": process.env.EXPO_PUBLIC_SUPABASE_URL,
+      "SUPABASE_ANON_KEY": process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY
+    },
     "version": "1.0.0",
     "scheme": "lexicard",
     "orientation": "portrait",
