@@ -30,8 +30,8 @@ RUN mkdir -p /var/log/nginx
 RUN mkdir -p /usr/share/nginx/html
 
 # Try to copy dist (Expo export output)
-COPY --from=builder /app/dist /usr/share/nginx/html 2>/dev/null || true
-COPY --from=builder /app/web-build /usr/share/nginx/html 2>/dev/null || true
+COPY --from=builder /app/dist/ /usr/share/nginx/html/ 2>/dev/null || true
+COPY --from=builder /app/web-build/ /usr/share/nginx/html/ 2>/dev/null || true
 
 # Fallback: copy public folder with all assets
 COPY --from=builder /app/public/ /usr/share/nginx/html/
