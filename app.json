@@ -87,17 +87,7 @@
           "purpose": "maskable"
         }
       ]
-    },
-    "plugins": [
-      [
-        "expo-font",
-        {
-          "fonts": [
-            "./assets/fonts/Inter_400Regular.ttf",
-            "./assets/fonts/Inter_700Bold.ttf"
-          ]
-        }
-      ]
     ]
+  }
   }
 }
