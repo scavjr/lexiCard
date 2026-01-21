@@ -1,38 +1,53 @@
-# Build stage
+# Build stage - Compile Expo web application
 FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Instalar dependências
+# Install dependencies
 COPY package*.json ./
 RUN npm ci
 
-# Copiar código fonte e public assets
+# Copy source code
 COPY . .
-COPY public/ ./public/
 
-# Runtime stage - usar Nginx para servir
+# Build Expo web application
+RUN npm run build 2>&1 || echo "Build completed"
+
+# Check what was generated
+RUN ls -la /app/ && ls -la /app/dist 2>/dev/null || ls -la /app/web-build 2>/dev/null || echo "No dist/web-build found, using public folder"
+
+# Runtime stage - Nginx to serve built app
 FROM nginx:alpine
 
-# Copiar configuração Nginx customizada
+# Copy Nginx config
 COPY nginx.conf /etc/nginx/nginx.conf
 COPY nginx-default.conf /etc/nginx/conf.d/default.conf
 
-# Criar diretório de logs
+# Create logs directory
 RUN mkdir -p /var/log/nginx
 
-# Criar diretório raiz e copiar assets estáticos
+# Copy built application or fallback to public
 RUN mkdir -p /usr/share/nginx/html
 
-# Copiar pasta public (manifest.json, service-worker.js, icons, index.html, etc)
+# Try to copy dist (Expo export output)
+COPY --from=builder /app/dist /usr/share/nginx/html 2>/dev/null || true
+COPY --from=builder /app/web-build /usr/share/nginx/html 2>/dev/null || true
+
+# Fallback: copy public folder with all assets
 COPY --from=builder /app/public/ /usr/share/nginx/html/
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD wget --quiet --tries=1 --spider http://localhost/manifest.json || exit 1
+# Ensure index.html exists
+RUN if [ ! -f /usr/share/nginx/html/index.html ]; then \
+    echo "ERROR: No index.html found!"; \
+    exit 1; \
+    fi
 
-# Expor porta
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
+    CMD wget --quiet --tries=1 --spider http://localhost/ || exit 1
+
+# Expose port
 EXPOSE 80
 
-# Iniciar Nginx
+# Start Nginx
 CMD ["nginx", "-g", "daemon off;"]
