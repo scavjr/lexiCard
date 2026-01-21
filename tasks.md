@@ -247,22 +247,27 @@
 
 ---
 
-### ⬜ Task 2.2: Implementar player de áudio para pronúncia
+### ✅ Task 2.2: Implementar player de áudio para pronúncia
 
 **Descrição:** Criar player de áudio para reproduzir a pronúncia da palavra.
 
 **Subtarefas:**
 
-- [ ] Instalar `expo-av` para áudio
-- [ ] Criar componente `AudioButton.tsx` reutilizável
-- [ ] Implementar lógica para carregar áudio via URL
-- [ ] Adicionar ícone de speaker e feedback visual (loading, playing)
-- [ ] Testar reprodução com palavras reais da API
-- [ ] Adicionar fallback para quando não tiver conexão
-- [ ] Testar em múltiplos dispositivos/navegadores
+- [x] Instalar `expo-av` para áudio
+- [x] Criar componente `AudioButton.tsx` reutilizável
+- [x] Implementar lógica para carregar áudio via URL
+- [x] Adicionar ícone de speaker e feedback visual (loading, playing)
+- [x] Testar reprodução com palavras reais da API
+- [x] Adicionar fallback para quando não tiver conexão
+- [x] Testar em múltiplos dispositivos/navegadores
+- [x] Exibir definição no card azul (clique em 📖)
+- [x] Reduzir tamanho da fonte para definição caber no card
+- [x] Criar ícone 📝 para mostrar exemplo de frase
+
+**Resultado:** AudioButton com NativeWind + Definição + Exemplo, todos com feedback visual de estado ativo.
 
 **Requisitos:** Task 2.1 concluída
-**Prioridade:** 🟠 ALTA
+**Prioridade:** 🟢 COMPLETA
 
 ---
 

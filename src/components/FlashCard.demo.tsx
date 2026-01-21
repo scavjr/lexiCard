@@ -3,36 +3,149 @@
  * Demonstra como usar o card em uma aplicação real
  */
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { View, Text, ScrollView, StyleSheet, Alert } from "react-native";
 import FlashCard from "@/components/FlashCard";
+
+interface CardData {
+  word: string;
+  translation: string;
+  definition?: string;
+  example?: string;
+  phonetic?: string;
+  audioUrl?: string;
+}
 
 /**
  * Demo FlashCard - Tela de exemplo com múltiplos cards
  */
 export const FlashCardDemo: React.FC = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [cards, setCards] = useState<CardData[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // Dados de exemplo (em produção viriam do wordService)
-  const cards = [
+  // Palavras para buscar da API
+  const wordsToFetch = [
+    { word: "Serendipity", translation: "Serendipidade" },
+    { word: "Ephemeral", translation: "Efêmero" },
+    { word: "Ubiquitous", translation: "Ubíquo" },
+  ];
+
+  useEffect(() => {
+    const fetchCardsFromAPI = async () => {
+      try {
+        const cardsData: CardData[] = [];
+
+        for (const { word, translation } of wordsToFetch) {
+          const response = await fetch(
+            `https://api.dictionaryapi.dev/api/v2/entries/en/${word.toLowerCase()}`,
+          );
+
+          if (!response.ok) {
+            throw new Error(`Failed to fetch ${word}`);
+          }
+
+          const data = response.json().then((arr: any) => {
+            if (!Array.isArray(arr) || arr.length === 0) return null;
+
+            const entry = arr[0];
+            let audioUrl = entry.phonetics?.find((p: any) => p.audio)?.audio;
+            const phonetic = entry.phonetic || entry.phonetics?.[0]?.text || "";
+            const definition =
+              entry.meanings?.[0]?.definitions?.[0]?.definition || "";
+
+            // Procurar por exemplo na primeira definição, se não tiver procurar na próxima
+            let example = entry.meanings?.[0]?.definitions?.[0]?.example || "";
+
+            // Se não encontrou exemplo, procurar em outras definições
+            if (!example && entry.meanings?.[0]?.definitions) {
+              for (const def of entry.meanings[0].definitions) {
+                if (def.example) {
+                  example = def.example;
+                  break;
+                }
+              }
+            }
+
+            console.log(`[API] ${word}: phonetic="${phonetic}"`);
+
+            // Normalizar URL de áudio
+            let finalAudioUrl = "";
+            if (audioUrl) {
+              // Se começa com //, adicionar https:
+              if (audioUrl.startsWith("//")) {
+                finalAudioUrl = `https:${audioUrl}`;
+              }
+              // Se já tem protocolo, usar como está
+              else if (audioUrl.startsWith("http")) {
+                finalAudioUrl = audioUrl;
+              }
+              // Senão, construir a URL completa
+              else {
+                finalAudioUrl = `https://api.dictionaryapi.dev${audioUrl}`;
+              }
+            } else {
+              // Fallback: usar URL padrão da API
+              finalAudioUrl = `https://api.dictionaryapi.dev/media/pronunciations/en/${word.toLowerCase()}-us.mp3`;
+            }
+
+            return {
+              word,
+              translation,
+              definition,
+              example,
+              phonetic,
+              audioUrl: finalAudioUrl,
+            };
+          });
+
+          const cardData = await data;
+          if (cardData) {
+            cardsData.push(cardData);
+          }
+        }
+
+        setCards(cardsData.length > 0 ? cardsData : getDefaultCards());
+      } catch (error) {
+        console.error("Erro ao buscar cards da API:", error);
+        setCards(getDefaultCards());
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCardsFromAPI();
+  }, []);
+
+  const getDefaultCards = (): CardData[] => [
     {
       word: "Serendipity",
       translation: "Serendipidade",
       definition:
         "The occurrence of events by chance in a happy or beneficial way",
-      audioUrl: "https://example.com/audio/serendipity.mp3",
+      example: "It was pure serendipity that we met at the airport that day.",
+      phonetic: "/ˌserənˈdɪpɪti/",
+      audioUrl:
+        "https://api.dictionaryapi.dev/media/pronunciations/en/serendipity-us.mp3",
     },
     {
       word: "Ephemeral",
       translation: "Efêmero",
       definition: "Lasting for a very short time",
-      audioUrl: "https://example.com/audio/ephemeral.mp3",
+      example:
+        "The beauty of cherry blossoms is ephemeral, lasting only a few weeks.",
+      phonetic: "/ɪˈfem(ə)rəl/",
+      audioUrl:
+        "https://api.dictionaryapi.dev/media/pronunciations/en/ephemeral-us.mp3",
     },
     {
       word: "Ubiquitous",
       translation: "Ubíquo",
       definition: "Present, appearing, or found everywhere",
-      audioUrl: "https://example.com/audio/ubiquitous.mp3",
+      example: "Smartphones have become ubiquitous in modern society.",
+      phonetic: "/juːˈbɪkwɪtəs/",
+      audioUrl:
+        "https://api.dictionaryapi.dev/media/pronunciations/en/ubiquitous-us.mp3",
     },
   ];
 
@@ -49,8 +162,9 @@ export const FlashCardDemo: React.FC = () => {
   };
 
   const handleAudioPlay = () => {
-    Alert.alert("🔊 Áudio", `Reproduzindo pronúncia de "${current.word}"`);
-    // Em produção, aqui teríamos a lógica real de reprodução de áudio
+    // O AudioButton já cuida da reprodução via audioUrl
+    // Este callback é apenas para logging/analytics opcional
+    console.log(`[Audio] Iniciando pronúncia de: ${current.word}`);
   };
 
   const handleShowExample = () => {
@@ -75,51 +189,70 @@ export const FlashCardDemo: React.FC = () => {
       <View style={styles.header}>
         <Text style={styles.title}>Aprenda Vocabulário</Text>
         <Text style={styles.subtitle}>
-          Card {currentIndex + 1} de {cards.length}
+          {loading
+            ? "Carregando..."
+            : `Card ${currentIndex + 1} de ${cards.length}`}
         </Text>
       </View>
 
-      {/* FlashCard */}
-      <View style={styles.cardContainer}>
-        <FlashCard
-          word={current.word}
-          translation={current.translation}
-          definition={current.definition}
-          audioUrl={current.audioUrl}
-          onCorrect={handleCorrect}
-          onIncorrect={handleIncorrect}
-          onAudioPlay={handleAudioPlay}
-          onShowExample={handleShowExample}
-          index={currentIndex}
-        />
-      </View>
-
-      {/* Informações */}
-      <View style={styles.infoContainer}>
-        <Text style={styles.infoText}>
-          💡 Toque no card para virar e ver a tradução
-        </Text>
-        <Text style={styles.infoText}>
-          📊 Use os botões para registrar seu desempenho
-        </Text>
-      </View>
-
-      {/* Progress Bar */}
-      <View style={styles.progressContainer}>
-        <View style={styles.progressBar}>
-          <View
-            style={[
-              styles.progressFill,
-              {
-                width: `${((currentIndex + 1) / cards.length) * 100}%`,
-              },
-            ]}
-          />
+      {/* Loading state */}
+      {loading ? (
+        <View style={styles.cardContainer}>
+          <Text style={styles.loadingText}>Carregando palavras da API...</Text>
         </View>
-        <Text style={styles.progressText}>
-          Progresso: {currentIndex + 1}/{cards.length}
-        </Text>
-      </View>
+      ) : cards.length > 0 ? (
+        <>
+          {/* FlashCard */}
+          <View style={styles.cardContainer}>
+            <FlashCard
+              word={current.word}
+              translation={current.translation}
+              definition={current.definition}
+              example={current.example}
+              phonetic={current.phonetic}
+              audioUrl={current.audioUrl}
+              onCorrect={handleCorrect}
+              onIncorrect={handleIncorrect}
+              onAudioPlay={handleAudioPlay}
+              onShowExample={handleShowExample}
+              index={currentIndex}
+            />
+          </View>
+
+          {/* Informações */}
+          <View style={styles.infoContainer}>
+            <Text style={styles.infoText}>
+              💡 Toque no card para virar e ver a tradução
+            </Text>
+            <Text style={styles.infoText}>
+              📊 Use os botões para registrar seu desempenho
+            </Text>
+          </View>
+
+          {/* Progress Bar */}
+          <View style={styles.progressContainer}>
+            <View style={styles.progressBar}>
+              <View
+                style={[
+                  styles.progressFill,
+                  {
+                    width: `${((currentIndex + 1) / cards.length) * 100}%`,
+                  },
+                ]}
+              />
+            </View>
+            <Text style={styles.progressText}>
+              Progresso: {currentIndex + 1}/{cards.length}
+            </Text>
+          </View>
+        </>
+      ) : (
+        <View style={styles.cardContainer}>
+          <Text style={styles.errorText}>
+            Erro ao carregar palavras. Verifique sua conexão.
+          </Text>
+        </View>
+      )}
     </ScrollView>
   );
 };
@@ -194,6 +327,22 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: "#6B7280",
     textAlign: "center",
+  },
+
+  loadingText: {
+    fontSize: 16,
+    color: "#6B7280",
+    textAlign: "center",
+    paddingVertical: 40,
+    fontFamily: "Inter",
+  },
+
+  errorText: {
+    fontSize: 16,
+    color: "#EF4444",
+    textAlign: "center",
+    paddingVertical: 40,
+    fontFamily: "Inter",
   },
 });
 

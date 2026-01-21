@@ -9,7 +9,7 @@
  * - Acessibilidade com labels e aria attributes
  */
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -20,6 +20,7 @@ import {
   AccessibilityInfo,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
+import { AudioButton } from "./AudioButton";
 
 /**
  * Props para o componente FlashCard
@@ -31,6 +32,10 @@ interface FlashCardProps {
   translation: string;
   /** Definição em inglês (opcional) */
   definition?: string;
+  /** Exemplo de uso da palavra em frase (opcional) */
+  example?: string;
+  /** Pronúncia escrita da palavra (opcional) */
+  phonetic?: string;
   /** URL do áudio para pronúncia (opcional) */
   audioUrl?: string;
   /** Callback ao clicar em acerto (verde) */
@@ -54,18 +59,35 @@ export const FlashCard: React.FC<FlashCardProps> = ({
   word,
   translation,
   definition,
+  example,
   audioUrl,
   onCorrect,
   onIncorrect,
   onAudioPlay,
   onShowExample,
   index = 0,
+  phonetic,
 }) => {
   // Estado de flip (false = frente, true = verso)
   const [isFlipped, setIsFlipped] = useState(false);
+  // Estado para mostrar definição na frente do card
+  const [showDefinition, setShowDefinition] = useState(false);
+  // Estado para mostrar exemplo na frente do card
+  const [showExample, setShowExample] = useState(false);
+  // Estado para mostrar pronúncia escrita
+  const [showPronunciation, setShowPronunciation] = useState(false);
 
   // Animação de flip
   const flipAnimation = React.useRef(new Animated.Value(0)).current;
+
+  // Resetar flip e definição quando a palavra muda
+  useEffect(() => {
+    setIsFlipped(false);
+    setShowDefinition(false);
+    setShowExample(false);
+    setShowPronunciation(false);
+    flipAnimation.setValue(0);
+  }, [word, flipAnimation]);
 
   // Interpolar a rotação baseado no progresso da animação
   const frontInterpolate = flipAnimation.interpolate({
@@ -121,8 +143,7 @@ export const FlashCard: React.FC<FlashCardProps> = ({
           justifyContent: "center",
         } as any
       }
-      accessible
-      accessibilityRole="button"
+      accessible={false}
       accessibilityLabel={`Flashcard ${index + 1}: ${word}`}
       accessibilityHint={
         isFlipped
@@ -171,7 +192,7 @@ export const FlashCard: React.FC<FlashCardProps> = ({
               activeOpacity={0.8}
               accessible={false}
             >
-              {/* Palavra Principal */}
+              {/* Palavra Principal - Sempre Visível no Topo */}
               <Text
                 style={styles.word}
                 numberOfLines={2}
@@ -180,21 +201,73 @@ export const FlashCard: React.FC<FlashCardProps> = ({
                 {word}
               </Text>
 
+              {/* Definição, Exemplo ou Pronúncia */}
+              <View style={styles.contentContainer}>
+                {showDefinition ? (
+                  <Text
+                    style={styles.definition}
+                    numberOfLines={6}
+                    accessibilityRole="text"
+                  >
+                    {definition || `Sem definição disponível`}
+                  </Text>
+                ) : showExample ? (
+                  <Text
+                    style={[styles.definition, styles.exampleText]}
+                    numberOfLines={4}
+                    accessibilityRole="text"
+                  >
+                    {example || `Sem exemplo disponível`}
+                  </Text>
+                ) : showPronunciation && phonetic ? (
+                  <View style={styles.pronunciationContainer}>
+                    <Text
+                      style={styles.phonetic}
+                      numberOfLines={2}
+                      accessibilityRole="text"
+                    >
+                      {phonetic}
+                    </Text>
+                  </View>
+                ) : null}
+              </View>
+
               {/* Ícones da Frente */}
               <View style={styles.frontIconsContainer}>
-                {/* Ícone de Áudio */}
+                {/* AudioButton para pronúncia */}
                 {audioUrl && (
+                  <View style={styles.audioButtonWrapper}>
+                    <AudioButton
+                      audioUrl={audioUrl}
+                      onPress={() => {
+                        setShowPronunciation(true);
+                        setShowDefinition(false);
+                        setShowExample(false);
+                        onAudioPlay?.();
+                      }}
+                      disabled={false}
+                    />
+                  </View>
+                )}
+
+                {/* Ícone de Definição */}
+                {definition && (
                   <TouchableOpacity
                     onPress={(e) => {
                       e.stopPropagation();
-                      onAudioPlay?.();
+                      setShowDefinition(!showDefinition);
+                      setShowExample(false);
+                      setShowPronunciation(false);
                     }}
-                    style={styles.iconButton}
+                    style={[
+                      styles.iconButton,
+                      showDefinition ? styles.iconButtonActive : null,
+                    ]}
                     accessible
                     accessibilityRole="button"
-                    accessibilityLabel="Reproduzir áudio da pronúncia"
+                    accessibilityLabel="Ver definição"
                   >
-                    <Text style={styles.iconText}>🔊</Text>
+                    <Text style={styles.iconText}>📖</Text>
                   </TouchableOpacity>
                 )}
 
@@ -203,14 +276,20 @@ export const FlashCard: React.FC<FlashCardProps> = ({
                   <TouchableOpacity
                     onPress={(e) => {
                       e.stopPropagation();
+                      setShowExample(!showExample);
+                      setShowDefinition(false);
+                      setShowPronunciation(false);
                       onShowExample?.();
                     }}
-                    style={styles.iconButton}
+                    style={[
+                      styles.iconButton,
+                      showExample ? styles.iconButtonActive : null,
+                    ]}
                     accessible
                     accessibilityRole="button"
-                    accessibilityLabel="Ver definição e exemplo"
+                    accessibilityLabel="Ver exemplo em frase"
                   >
-                    <Text style={styles.iconText}>📖</Text>
+                    <Text style={styles.iconText}>📝</Text>
                   </TouchableOpacity>
                 )}
 
@@ -374,11 +453,51 @@ const styles = StyleSheet.create({
     fontFamily: "Inter",
   },
 
+  wordSmall: {
+    fontSize: 28,
+  },
+
+  definitionSmall: {
+    fontSize: 14,
+    fontStyle: "italic",
+    lineHeight: 20,
+  },
+
+  wordContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  phonetic: {
+    fontSize: 14,
+    color: "rgba(255, 255, 255, 0.7)",
+    textAlign: "center",
+    marginTop: 8,
+    fontFamily: "Inter",
+    fontStyle: "italic",
+  },
+
+  iconButtonActive: {
+    backgroundColor: "rgba(255, 255, 255, 0.4)",
+    borderColor: "rgba(255, 255, 255, 0.6)",
+  },
+
   frontIconsContainer: {
     flexDirection: "row",
     gap: 16,
     justifyContent: "center",
     marginBottom: 16,
+  },
+
+  audioButtonWrapper: {
+    width: 56,
+    height: 56,
+    borderRadius: 12,
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 2,
+    borderColor: "rgba(255, 255, 255, 0.3)",
   },
 
   iconButton: {
