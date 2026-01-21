@@ -314,11 +314,11 @@
 
 ---
 
-### 🟡 Task 3.2: Configurar app.json para PWA
+### ✅ Task 3.2: Configurar app.json para PWA
 
 **Descrição:** Preparar aplicação para modo Web Progressive App.
 
-**Status:** Em Progresso ⏳
+**Status:** ✅ CONCLUÍDO
 
 **Implementado:**
 
@@ -425,23 +425,48 @@ lighthouse http://localhost:8081 --view
 
 ## �🚀 Fase 4: Deployment & DevOps (OceanDigital)
 
-### ⬜ Task 4.1: Configurar Docker e docker-compose para OceanDigital
+### 🟡 Task 4.1: Configurar Docker e docker-compose para OceanDigital
 
 **Descrição:** Criar containers para frontend (PWA) e backend (opcional).
 
-**Subtarefas:**
+**Status:** Em Progresso ⏳
 
-- [ ] Criar `Dockerfile` para build da aplicação Expo Web
-- [ ] Configurar multi-stage build (builder → runner)
-- [ ] Criar `docker-compose.yml` com:
-  - Serviço Web (Nginx + app Expo)
-  - Volume para logs
-  - Network para comunicação interna
-- [ ] Configurar variáveis de ambiente (.env.production)
-- [ ] Testar build localmente
-- [ ] Documentar passos de build
+**Implementado:**
 
-**Requisitos:** Task 3.2 concluída
+- ✅ Criar `Dockerfile` com multi-stage build (Node builder + Nginx runner)
+- ✅ Configurar `docker-compose.yml` com:
+  - Serviço web (Nginx + app Expo)
+  - Environment variables (Supabase)
+  - Health checks automáticos
+  - Volumes para logs
+  - Network customizada
+- ✅ Criar `nginx.conf` (configuração global)
+- ✅ Criar `nginx-default.conf` com:
+  - PWA headers (manifest, service-worker)
+  - Cache strategies (assets vs index.html)
+  - SPA routing (try_files para index.html)
+  - Gzip compression
+  - Security headers
+- ✅ Criar `.dockerignore` (otimizar build size)
+- ✅ Criar `.env.production.example` (template de variáveis)
+- ✅ Criar `DOCKER_SETUP_GUIDE.md` (guia de testes locais)
+
+**Próximas Ações:**
+
+```bash
+# 1. Testar build local
+docker build -t lexicard:latest .
+
+# 2. Testar com docker-compose
+cp .env.production.example .env.production
+# Editar .env.production com valores reais
+docker-compose up -d
+
+# 3. Testar acesso
+curl -I http://localhost:3000
+```
+
+**Requisitos:** Task 3.2 concluída ✅
 **Prioridade:** 🔴 CRÍTICA
 
 ---

@@ -80,11 +80,13 @@ http://localhost:8081
 ### 2. **Validar com Chrome DevTools** (5 min)
 
 **F12 → Application:**
+
 - ✅ Manifest tab → Verificar metadados
 - ✅ Service Workers → Deve estar "activated and running"
-- ✅ Cache Storage → Ver caches lexicard-*
+- ✅ Cache Storage → Ver caches lexicard-\*
 
 **F12 → Network:**
+
 - Throttle para "Offline"
 - Atualizar página
 - ✅ Deve carregar do cache com sucesso
@@ -92,11 +94,13 @@ http://localhost:8081
 ### 3. **Testar Instalação da PWA** (2 min)
 
 **Desktop (Chrome/Edge):**
+
 - Endereço bar → Ícone de instalação (canto superior direito)
 - Clicar "Instalar" ou "Instalar LexiCard"
 - Deve aparecer no app launcher
 
 **Mobile (Android Chrome):**
+
 - Menu (⋮) → "Instalar app"
 - Aceitar prompt
 - Deve aparecer em home screen com ícone 192x192
@@ -118,35 +122,35 @@ lighthouse http://localhost:8081 --view
 
 ```javascript
 // Cole no console (F12):
-navigator.serviceWorker.getRegistrations().then(regs => {
-  console.log('SW Registrations:', regs);
-  regs.forEach(reg => {
-    console.log('Scope:', reg.scope);
-    console.log('Active:', reg.active ? 'Sim ✅' : 'Não ❌');
+navigator.serviceWorker.getRegistrations().then((regs) => {
+  console.log("SW Registrations:", regs);
+  regs.forEach((reg) => {
+    console.log("Scope:", reg.scope);
+    console.log("Active:", reg.active ? "Sim ✅" : "Não ❌");
   });
 });
 
 // Verificar caches:
-caches.keys().then(names => {
-  console.log('Caches disponíveis:', names);
+caches.keys().then((names) => {
+  console.log("Caches disponíveis:", names);
 });
 ```
 
 ## 📋 Checklist de Validação
 
-| Item | Status | Notas |
-|------|--------|-------|
-| manifest.json criado | ✅ | Web App Manifest W3C compliant |
-| Service Worker criado | ✅ | Cache + Network-first strategies |
-| Ícones 192x192 gerados | ✅ | PNG + maskable |
-| Ícones 512x512 gerados | ✅ | PNG + maskable |
-| Favicons gerados | ✅ | 32x32 e 16x16 |
-| index.html criado | ✅ | Com meta tags PWA |
-| app.json atualizado | ✅ | Web config melhorado |
-| Offline fallback | ✅ | Página offline renderizada |
-| Instalação testada | ⏳ | Pendente - testar localmente |
-| Lighthouse PWA score | ⏳ | Pendente - espera instalação |
-| Offline mode testado | ⏳ | Pendente - DevTools throttle |
+| Item                   | Status | Notas                            |
+| ---------------------- | ------ | -------------------------------- |
+| manifest.json criado   | ✅     | Web App Manifest W3C compliant   |
+| Service Worker criado  | ✅     | Cache + Network-first strategies |
+| Ícones 192x192 gerados | ✅     | PNG + maskable                   |
+| Ícones 512x512 gerados | ✅     | PNG + maskable                   |
+| Favicons gerados       | ✅     | 32x32 e 16x16                    |
+| index.html criado      | ✅     | Com meta tags PWA                |
+| app.json atualizado    | ✅     | Web config melhorado             |
+| Offline fallback       | ✅     | Página offline renderizada       |
+| Instalação testada     | ⏳     | Pendente - testar localmente     |
+| Lighthouse PWA score   | ⏳     | Pendente - espera instalação     |
+| Offline mode testado   | ⏳     | Pendente - DevTools throttle     |
 
 ## 🚀 Deploy Readiness
 

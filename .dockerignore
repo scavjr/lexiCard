@@ -1,0 +1,58 @@
+# Git
+.git
+.gitignore
+.github
+
+# Node
+node_modules
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+.npm
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Build/Dist
+dist
+build
+.expo
+.next
+out
+
+# Testing
+coverage
+.jest_cache
+.nyc_output
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Documentation
+README.md
+CHANGELOG.md
+*.md
+
+# OS
+Thumbs.db
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Docker
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Temporary
+tmp
+temp
+*.tmp
+.cache
