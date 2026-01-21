@@ -369,8 +369,8 @@
         <p>LexiCard é uma plataforma moderna para aprender vocabulário em inglês com flashcards interativos. Funciona completamente offline e sincroniza com a nuvem.</p>
         
         <div class="hero-buttons">
-            <button class="btn-primary" onclick="launchApp()">🚀 Abrir Aplicação</button>
-            <button class="btn-secondary" onclick="document.querySelector('.features').scrollIntoView({behavior: 'smooth'})">Saiba Mais</button>
+            <button class="btn-primary" onclick="document.querySelector('.features').scrollIntoView({behavior: 'smooth'})">📚 Ver Recursos</button>
+            <button class="btn-secondary" onclick="document.querySelector('.cta-section').scrollIntoView({behavior: 'smooth'})">⚙️ Configurar Localmente</button>
         </div>
     </section>
     
@@ -440,11 +440,14 @@
     
     <!-- CTA Section -->
     <section class="cta-section">
-        <h2>Comece Agora Gratuitamente</h2>
-        <p>Não precisa de cartão de crédito. PWA gratuito com suporte offline completo.</p>
-        <button class="btn-primary" onclick="launchApp()" style="margin: 0 auto;">
-            Abrir LexiCard →
-        </button>
+        <h2>Comece Agora</h2>
+        <p>A aplicação completa com login, flashcards e dashboard está pronta para desenvolvimento local.</p>
+        <p style="font-size: 14px; margin-top: 10px; color: #666;">Para ver a app em ação:</p>
+        <code style="display: block; margin-top: 15px; padding: 15px; background: #f5f5f5; border-radius: 8px; font-family: monospace; font-size: 13px;">
+npm install<br/>
+npm run web
+        </code>
+        <p style="font-size: 13px; margin-top: 20px;">📱 <strong>Tecnologia:</strong> React Native + Expo + Supabase + PWA Offline</p>
     </section>
     
     <!-- Footer -->
@@ -460,14 +463,6 @@
     
     <!-- Scripts -->
     <script>
-        // Launch app function
-        function launchApp() {
-            // For now, show a message since we need the actual Expo bundle
-            // In production, this would navigate to /app or load the bundle
-            const message = `LexiCard está em preparação para lançamento.\n\n✨ Recursos:\n- Flashcards com animação 3D\n- Suporte offline completo\n- Sincronização em nuvem\n- Sistema de pontuação CEFR`;
-            alert(message);
-        }
-        
         // Service Worker Registration
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
