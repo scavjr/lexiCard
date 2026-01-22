@@ -4,10 +4,10 @@
  * Features:
  * - Hero section com valor do app
  * - Botão para Login
- * - Botão para Sign Up (opcional)
+ * - Botão para Instalar (PWA)
  */
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -18,6 +18,11 @@ import {
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 
+interface BeforeInstallPromptEvent extends Event {
+  prompt: () => Promise<void>;
+  userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
+}
+
 interface LandingPageProps {
   onNavigateToLogin: () => void;
 }
@@ -25,6 +30,44 @@ interface LandingPageProps {
 export const LandingPage: React.FC<LandingPageProps> = ({
   onNavigateToLogin,
 }) => {
+  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+  const [showInstallButton, setShowInstallButton] = useState(false);
+
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e: Event) => {
+      e.preventDefault();
+      const promptEvent = e as BeforeInstallPromptEvent;
+      setDeferredPrompt(promptEvent);
+      setShowInstallButton(true);
+    };
+
+    window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+
+    const handleAppInstalled = () => {
+      console.log("✅ PWA instalado com sucesso!");
+      setShowInstallButton(false);
+    };
+
+    window.addEventListener("appinstalled", handleAppInstalled);
+
+    return () => {
+      window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+      window.removeEventListener("appinstalled", handleAppInstalled);
+    };
+  }, []);
+
+  const handleInstallClick = async () => {
+    if (!deferredPrompt) return;
+
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+
+    if (outcome === "accepted") {
+      console.log("✅ Usuário aceitou instalar o PWA");
+      setDeferredPrompt(null);
+      setShowInstallButton(false);
+    }
+  };
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView
@@ -119,6 +162,16 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           <Text style={styles.ctaDescription}>
             Cadastre-se ou faça login para começar a aprender
           </Text>
+
+          {/* Botão de Instalar (PWA) */}
+          {showInstallButton && (
+            <TouchableOpacity
+              style={[styles.primaryButton, styles.installButton]}
+              onPress={handleInstallClick}
+            >
+              <Text style={styles.primaryButtonText}>📥 Instalar Aplicativo</Text>
+            </TouchableOpacity>
+          )}
 
           <TouchableOpacity
             style={styles.primaryButton}
@@ -269,6 +322,10 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 5,
+  },
+  installButton: {
+    backgroundColor: "#10B981",
+    shadowColor: "#10B981",
   },
   primaryButtonText: {
     color: "#FFFFFF",
