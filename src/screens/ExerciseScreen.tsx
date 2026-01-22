@@ -24,9 +24,11 @@ import { supabase } from "@/services/supabase";
 interface Word {
   id: string;
   word: string;
-  definition: string;
-  audio_url?: string;
+  definition: string | null;
+  audio_url?: string | null;
   examples?: string[];
+  translation?: string;
+  phonetic?: string | null;
 }
 
 interface ExerciseScreenProps {
@@ -69,14 +71,13 @@ export const ExerciseScreen: React.FC<ExerciseScreenProps> = ({
         // Verificar se já existe progresso para essa palavra
         const { data: existing } = await supabase
           .from("user_progress")
-          .select("id, acertos, erros")
+          .select("id, acertos")
           .eq("user_id", userId)
           .eq("word_id", currentWord.id)
           .eq("organization_id", organizationId)
           .single();
 
         const newCorrect = (existing?.acertos || 0) + (isCorrect ? 1 : 0);
-        const newIncorrect = (existing?.erros || 0) + (isCorrect ? 0 : 1);
 
         if (existing) {
           // Atualizar existente
@@ -84,7 +85,6 @@ export const ExerciseScreen: React.FC<ExerciseScreenProps> = ({
             .from("user_progress")
             .update({
               acertos: newCorrect,
-              erros: newIncorrect,
               data_ultimo_acerto: new Date().toISOString(),
             })
             .eq("id", existing.id);
@@ -95,7 +95,6 @@ export const ExerciseScreen: React.FC<ExerciseScreenProps> = ({
             word_id: currentWord.id,
             organization_id: organizationId,
             acertos: newCorrect,
-            erros: newIncorrect,
             data_ultimo_acerto: new Date().toISOString(),
           });
         }
@@ -226,14 +225,15 @@ export const ExerciseScreen: React.FC<ExerciseScreenProps> = ({
       >
         <FlashCard
           word={currentWord.word}
-          translation={currentWord.definition}
-          definition={currentWord.definition}
+          translation={currentWord.translation || currentWord.word}
+          definition={currentWord.definition ?? undefined}
           example={
             currentWord.examples && currentWord.examples.length > 0
               ? currentWord.examples[0]
               : undefined
           }
-          audioUrl={currentWord.audio_url}
+          phonetic={currentWord.phonetic ?? undefined}
+          audioUrl={currentWord.audio_url ?? undefined}
           onCorrect={handleCorrect}
           onIncorrect={handleIncorrect}
           index={currentIndex}

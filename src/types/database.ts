@@ -268,25 +268,40 @@ export type Database = {
       words_global: {
         Row: {
           audio_url: string | null
+          cefr_level: string | null
           created_at: string | null
           definition: string | null
+          examples: string[] | null
+          frequency_score: number | null
           id: string
+          phonetic: string | null
+          translation: string | null
           updated_at: string | null
           word: string
         }
         Insert: {
           audio_url?: string | null
+          cefr_level?: string | null
           created_at?: string | null
           definition?: string | null
+          examples?: string[] | null
+          frequency_score?: number | null
           id?: string
+          phonetic?: string | null
+          translation?: string | null
           updated_at?: string | null
           word: string
         }
         Update: {
           audio_url?: string | null
+          cefr_level?: string | null
           created_at?: string | null
           definition?: string | null
+          examples?: string[] | null
+          frequency_score?: number | null
           id?: string
+          phonetic?: string | null
+          translation?: string | null
           updated_at?: string | null
           word?: string
         }

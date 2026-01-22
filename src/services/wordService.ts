@@ -28,6 +28,14 @@ type DbWord = Tables<"words">;
 type DbWordGlobal = Tables<"words_global">;
 type DbWordGlobalInsert = TablesInsert<"words_global">;
 
+type EnrichableWord = {
+  id: string;
+  word: string;
+  definition: string | null;
+  audio_url: string | null;
+  examples?: string[];
+};
+
 /**
  * URLs externas para a API de dicionário
  */
@@ -285,7 +293,8 @@ class WordService {
     this.validateContext();
 
     const definition = apiData.meanings?.[0]?.definitions?.[0]?.definition;
-    const audioUrl = apiData.phonetics?.[0]?.audio;
+    const audioUrl = this.extractAudioUrl(apiData);
+    const phonetic = this.extractPhonetic(apiData);
     const translation = ""; // TODO: Integrar serviço de tradução
     const lowerWord = word.toLowerCase();
 
@@ -298,6 +307,7 @@ class WordService {
         word: lowerWord,
         definition: definition || undefined,
         audio_url: audioUrl || undefined,
+        phonetic: phonetic || undefined,
       };
 
       const { data: insertedGlobal, error: globalError } = await supabase
@@ -395,6 +405,25 @@ class WordService {
             );
       throw err;
     }
+  }
+
+  /**
+   * Retorna o primeiro audio_url disponível na resposta da API.
+   * Alguns verbetes têm vários phonetics; usamos o primeiro com audio não vazio.
+   */
+  private extractAudioUrl(apiData: IDictionaryEntry): string | null {
+    const phonetics = apiData.phonetics || [];
+    const withAudio = phonetics.find((p) => p.audio && p.audio.trim().length > 0);
+    return withAudio?.audio || null;
+  }
+
+  /**
+   * Extrai pronúncia escrita (phonetic) do primeiro phonetic disponível
+   */
+  private extractPhonetic(apiData: IDictionaryEntry): string | null {
+    const phonetics = apiData.phonetics || [];
+    const withText = phonetics.find((p) => p.text && p.text.trim().length > 0);
+    return withText?.text || null;
   }
 
   /**
@@ -617,6 +646,103 @@ class WordService {
         );
       throw err;
     }
+  }
+
+  /**
+   * Enriquece múltiplas palavras com dados da API se necessário
+   * Atualiza apenas colunas existentes (definition, audio_url)
+   * e devolve exemplos em memória para uso imediato
+   */
+  async enrichWords(words: EnrichableWord[]): Promise<EnrichableWord[]> {
+    console.log(`🔄 Enriquecendo ${words.length} palavras com dados da API...`);
+
+    const enriched: EnrichableWord[] = [];
+
+    for (const word of words) {
+      try {
+        const needsDefinition = !word.definition;
+        const needsAudio = !word.audio_url;
+
+        if (!needsDefinition && !needsAudio) {
+          enriched.push({ ...word });
+          continue;
+        }
+
+        console.log(
+          `📚 Enriquecendo: ${word.word} (def: ${!needsDefinition}, audio: ${!needsAudio})`
+        );
+
+        const apiData = await this.fetchFromAPI(word.word);
+        if (!apiData) {
+          console.warn(`⚠️ Não encontrado na API: ${word.word}`);
+          enriched.push({ ...word });
+          continue;
+        }
+
+        const definition =
+          apiData.meanings?.[0]?.definitions?.[0]?.definition || null;
+        const audioUrl = this.extractAudioUrl(apiData);
+        const phonetic = this.extractPhonetic(apiData);
+
+        const examples: string[] = [];
+        apiData.meanings?.forEach((meaning) => {
+          meaning.definitions?.forEach((def) => {
+            if (def.example && examples.length < 5) {
+              examples.push(def.example);
+            }
+          });
+        });
+
+        const mergedWord: EnrichableWord = {
+          ...word,
+          definition: definition || word.definition,
+          audio_url: audioUrl || word.audio_url,
+          examples: examples.length > 0 ? examples : word.examples || [],
+        };
+
+        if (definition || audioUrl || phonetic) {
+          const updatePayload: {
+            definition?: string | null;
+            audio_url?: string | null;
+            phonetic?: string | null;
+          } = {};
+
+          if (definition && definition !== word.definition) {
+            updatePayload.definition = definition;
+          }
+          if (audioUrl && audioUrl !== word.audio_url) {
+            updatePayload.audio_url = audioUrl;
+          }
+          if (phonetic) {
+            updatePayload.phonetic = phonetic;
+          }
+
+          if (Object.keys(updatePayload).length > 0) {
+            const { error } = await supabase
+              .from("words_global")
+              .update(updatePayload)
+              .eq("id", word.id);
+
+            if (error) {
+              console.error(`❌ Erro ao atualizar ${word.word}:`, error);
+            }
+          }
+        }
+
+        console.log(
+          `✅ Enriquecido: ${word.word} (def: ${!!mergedWord.definition}, audio: ${!!mergedWord.audio_url}, exemplos: ${mergedWord.examples?.length || 0})`
+        );
+        enriched.push(mergedWord);
+
+        await new Promise((resolve) => setTimeout(resolve, 150));
+      } catch (error) {
+        console.error(`❌ Erro enriquecendo ${word.word}:`, error);
+        enriched.push({ ...word });
+      }
+    }
+
+    console.log(`✅ Enriquecimento completo: ${enriched.length}/${words.length}`);
+    return enriched;
   }
 
   /**

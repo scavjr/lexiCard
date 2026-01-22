@@ -345,17 +345,6 @@ export const FlashCard: React.FC<FlashCardProps> = ({
                 {translation}
               </Text>
 
-              {/* Definição (se disponível) */}
-              {definition && (
-                <Text
-                  style={styles.definition}
-                  numberOfLines={2}
-                  accessibilityRole="text"
-                >
-                  {definition}
-                </Text>
-              )}
-
               {/* Botões de Feedback */}
               <View style={styles.feedbackButtons}>
                 {/* Botão de Erro (Vermelho) */}

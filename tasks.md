@@ -22,12 +22,13 @@
 
 ### 📊 Progresso de Seed de Palavras
 
-**Status:** 🟡 EM PROGRESSO - Abordagem Híbrida Gratuita (Task 1.5)
+**Status:** 🟡 EM PROGRESSO - Carregamento Lazy sob Demanda (Task 1.5)
 
-- **Dia 1:** ✅ Concluído com 86 palavras inseridas
-- **Progresso Total:** 86/10.000 palavras (0.86%)
-- **Próximo:** Expandir lista para 1.000+ palavras (Dias 2-10)
-- **Comando:** `npm run seed:1k:day1` (pronto para dias 2-10)
+- **Estratégia:** Arquivo externo com lista de palavras (word) → Banco (words_global.word) → API sob demanda
+- **Carregamento:** Apenas coluna `word` gravada no banco durante seed
+- **Enriquecimento:** Quando usuário começa exercício, sistema busca dados restantes no DictionaryAPI
+- **Cache:** AsyncStorage local (offline-first)
+- **Comando:** `npm run seed:init` (seed inicial com todas as palavras)
 - **RLS:** Temporariamente desabilitado (re-habilitar antes de produção)
 
 ### 📚 Progresso de Implementação - Exercício 20 Palavras
@@ -58,31 +59,33 @@
 
 ---
 
-## 🏗️ Decisões Arquiteturais
+### Estratégia de Palavras com Carregamento Lazy (NOVA)
 
-### Estratégia de Palavras Híbrida (DOCUMENTADA)
+**Decisão:** Implementar com seed inicial leve + enriquecimento sob demanda via API:
 
-**Decisão:** Implementar com duas tabelas coordenadas para otimizar armazenamento e isolamento:
-
-**Tabela 1: `words_global`** (Compartilhada entre todas as orgs)
+**Tabela: `words_global`** (Compartilhada entre todas as orgs)
 
 ```sql
 - id: UUID (PK)
-- word: TEXT (UNIQUE) -- "hello", "mundo", etc
-- definition: TEXT -- Definição universal
-- audio_url: TEXT -- Pronúncia
+- word: TEXT (UNIQUE) -- "hello", "mundo", etc (PREENCHIDO NO SEED)
+- definition: TEXT (nullable) -- Definição (PREENCHIDA BAJO DEMANDA)
+- audio_url: TEXT (nullable) -- Pronúncia (PREENCHIDA BAJO DEMANDA)
+- examples: TEXT[] (nullable) -- Exemplos (PREENCHIDA BAJO DEMANDA)
+- part_of_speech: TEXT (nullable) -- Classe gramatical (PREENCHIDA BAJO DEMANDA)
+- cefr_level: TEXT (nullable) -- Nível CEFR (PREENCHIDA BAJO DEMANDA)
 - created_at: TIMESTAMP
 - updated_at: TIMESTAMP
 -- Sem organization_id (realmente global)
+-- RLS: Leitura pública, escrita autenticada (ou desabilitada para seed)
 ```
 
-**Tabela 2: `words`** (Personalizações por organização)
+**Tabela: `words`** (Personalizações por organização)
 
 ```sql
 - id: UUID (PK)
 - word_global_id: UUID (FK para words_global) -- Vincula à palavra global
 - organization_id: UUID (FK para organizations) -- Isolamento org
-- translation: TEXT -- Tradução customizada pela org
+- translation: TEXT (nullable) -- Tradução customizada pela org
 - custom_definition: TEXT (nullable) -- Override da definição
 - created_by: UUID (FK para users)
 - created_at: TIMESTAMP
@@ -90,23 +93,46 @@
 -- RLS: SELECT/INSERT/UPDATE/DELETE filtrado por organization_id
 ```
 
-**Fluxo de Fetch:**
+**Fluxo de Seed e Enriquecimento:**
 
-1. Usuário solicita palavra "apple"
-2. Buscar em AsyncStorage local (org-specific namespace)
-3. Se não encontrar, buscar em `words_global` + customizações em `words` WHERE organization_id
-4. Se não encontrar, buscar em dictionaryapi.dev
-5. Salvar base em `words_global` (UNIQUE, primeira org ganha) + customizações em `words`
+```
+FASE 1: SEED INICIAL (Uma só vez)
+├── Arquivo externo: seeds/words-list.json (array de strings)
+├── Exemplo: ["hello", "world", "suspicious", ...]
+├── Gravar em words_global apenas coluna 'word'
+└── Comando: npm run seed:init
+
+FASE 2: ENRIQUECIMENTO SOB DEMANDA
+├── Usuário clica em "Exercício" → ExerciseSelector
+├── Query: SELECT 20 palavras aleatórias de words_global NÃO completadas
+├── Para cada palavra:
+│   ├── 1. Verificar AsyncStorage local (namespace: words_{orgId}_{word})
+│   ├── 2. Se vazio → verificar words_global (se tem definition + audio_url)
+│   ├── 3. Se vazio → chamar DictionaryAPI.dev
+│   ├── 4. UPDATE words_global com definition, audio_url, examples, part_of_speech, cefr_level
+│   └── 5. Cachear em AsyncStorage para offline
+├── Exibir exercício com dados enriquecidos
+└── Próximo exercício carrega 20 NOVAS palavras
+
+FASE 3: REUTILIZAÇÃO
+├── Próximas execuções da mesma palavra
+├── 1. AsyncStorage tem dados → usar (instantâneo, offline)
+├── 2. Se vazio → words_global tem dados → usar + cachear
+└── 3. Nunca mais chama API (economiza quota)
+```
 
 **Benefícios:**
 
-- ✅ Zero redundância: "hello" armazenado 1x globalmente
+- ✅ Seed inicial rápido e leve (apenas strings)
+- ✅ Enriquecimento progressivo sob demanda (lazy loading)
+- ✅ Zero redundância: palavra armazenada 1x globalmente
 - ✅ Isolamento mantido: Orgs só veem suas customizações
-- ✅ Performance: `words_global` não cresce por org, RLS rápido em `words`
-- ✅ Flexibilidade: Cada org pode ter tradução diferente para a mesma palavra
+- ✅ Performance: Primeira busca pode ser lenta (API), próximas instantâneas
+- ✅ Offline-first: AsyncStorage permite funcionar sem internet
+- ✅ Economia: Chamadas API reduzidas ao mínimo (1x por palavra)
 - ✅ Segurança: organization_id filtro em `words`; anonymous read em `words_global`
 
-**Status:** ✅ IMPLEMENTADO - Migração criada e wordService ajustado
+**Status:** ✅ DECISÃO TOMADA - Pronto para implementação
 
 ---
 
@@ -117,7 +143,7 @@
 **Subtarefas:**
 
 - [x] Criar migração `words_global` em Supabase
-  - Tabela: id, word (UNIQUE), definition, audio_url, timestamps
+  - Tabela: id, word (UNIQUE), definition (null), audio_url (null), examples (null), part_of_speech (null), cefr_level (null), timestamps
   - RLS policies: leitura pública, escrita autenticada
   - Índice em word para buscas rápidas
 - [x] Modificar tabela `words` com FK para `words_global`
@@ -140,34 +166,61 @@
 
 ---
 
-### 🟡 Task 1.5: Seed de 10k palavras (1.000 por dia) - DictionaryAPI.dev (Zero Hardcode)
+### 🟡 Task 1.5: Seed de Palavras com Carregamento Lazy sob Demanda
 
-**Descrição:** Popular `words_global` com 10.000 palavras em inglês usando **DictionaryAPI.dev** (fonte gratuita). Estratégia: 1.000 palavras por dia. **CRÍTICO: Nunca hardcode. Sempre Supabase/AsyncStorage. Se não existir, buscar API e salvar.**
+**Descrição:** Carregar lista externa de palavras em `words_global.word` e enriquecer dados sob demanda via DictionaryAPI.dev durante exercícios.
 
-**Estrutura de Dados (Com Examples do DictionaryAPI):**
+**Estudo de Caso - Fluxo Completo:**
 
-```json
-{
-  "word": "suspicious",
-  "definition": "Arousing suspicion",
-  "examples": [
-    "His suspicious behaviour brought him to the attention of the police.",
-    "She gave me a suspicious look."
-  ],
-  "audio_url": "https://api.dictionaryapi.dev/media/pronunciations/en/suspicious-us.mp3",
-  "part_of_speech": "adjective",
-  "cefr_level": "B1",
-  "frequency_score": 7.5
-}
+```
+USUÁRIO 1 busca a palavra "hello" (primeira vez na plataforma):
+├── AsyncStorage vazio
+├── words_global.hello existe, mas definition é NULL
+├── Sistema chama DictionaryAPI.dev
+├── Retorna: {definition, audio_url, examples[], part_of_speech, cefr_level}
+├── UPDATE words_global.hello com esses dados
+├── Cachear em AsyncStorage.words_orgId_hello
+└── Exibir flashcard ao usuário
+
+USUÁRIO 2 busca a palavra "hello" (segundos depois):
+├── AsyncStorage vazio
+├── words_global.hello JÁ TEM todos os dados (preenchido por USER 1)
+├── Cachear em AsyncStorage.words_orgId_hello
+└── Exibir flashcard instantaneamente (SEM chamar API)
+
+USUÁRIO 1 busca "hello" novamente (próximo dia):
+├── AsyncStorage.words_orgId_hello tem dados
+├── Usar direto (OFFLINE funciona!)
+└── Exibir flashcard instantaneamente
 ```
 
-**Fluxo de Exercício - Regra das 20 Palavras (IMPLEMENTADO):**
+**Estrutura Progressiva de words_global:**
+
+```sql
+-- APÓS SEED INICIAL (apenas coluna word)
+SELECT * FROM words_global LIMIT 3;
+id                | word      | definition | audio_url | examples | part_of_speech | cefr_level
+----------------+-----------+----------+----------+--------+----------+--------
+uuid-1          | hello     | NULL     | NULL     | NULL  | NULL     | NULL
+uuid-2          | world     | NULL     | NULL     | NULL  | NULL     | NULL
+uuid-3          | book      | NULL     | NULL     | NULL  | NULL     | NULL
+
+-- APÓS PRIMEIRO USO (dados enriquecidos)
+SELECT * FROM words_global WHERE word = 'hello';
+id                | word      | definition                | audio_url                                    | examples                              | part_of_speech | cefr_level
+----------------+-----------+------------------------+------------------------------------------+-----------------------------------+----------+--------
+uuid-1          | hello     | Expression of greeting | https://api.dict.dev/.../hello-us.mp3 | ["Hello, how are you?", ...]  | interjection | A1
+```
+
+**Fluxo de Exercício - Rotação de 20 Palavras Aleatórias:**
 
 ```
 1. TELA ExerciseSelector:
-   - Carrega automaticamente 20 palavras com score < 3
-   - Mostra lista completa com definições e exemplos
-   - Prioridade: nunca vistas > vistas 1-2x > restantes
+   - Query: SELECT 20 palavras WHERE id NOT IN (
+       SELECT word_id FROM user_progress WHERE user_id = $1
+     ) ORDER BY RANDOM()
+   - Para cada palavra: chamar getWordData(word) para enriquecer se necessário
+   - Exibe lista com palavra + status (spinner se loading dados)
    - Usuário clica "Começar Exercício"
 
 2. TELA ExerciseScreen:
@@ -180,69 +233,152 @@
 3. ROTAÇÃO APÓS COMPLETAR:
    - Salva sessão em flashcard_sessions
    - Volta ao dashboard com estatísticas
-   - Próximo exercício carrega novo set de 20
+   - Próximo exercício carrega novo set de 20 DIFERENTES das anteriores
+   - Loop continua até terminar TODAS as palavras do banco
 
-4. ARMAZENAMENTO:
-   - user_progress: acertos, erros, data_ultimo_acerto
-   - flashcard_sessions: total_aprendidas, total_revisadas, duracao_segundos
-   - AsyncStorage: cache local (offline)
-   - Supabase: source of truth
+4. ARMAZENAMENTO ESTRATIFICADO:
+   - AsyncStorage: Cache local por org (offline-first, instantâneo)
+   - Supabase words_global: Source of truth enriquecido (compartilhado)
+   - Supabase user_progress: Rastreamento de acertos/erros (por usuário)
+   - Supabase flashcard_sessions: Histórico de exercícios (por usuário)
 ```
 
-**Status:** ✅ IMPLEMENTADO
+**Fluxo de Busca (getWordData em wordService.ts):**
 
-- [x] ExerciseSelector.tsx criada
-- [x] ExerciseScreen.tsx criada
-- [x] AppNavigator integrado com novo fluxo
-- [x] Salva user_progress e flashcard_sessions
+```typescript
+async function getWordData(word: string, organizationId: UUID): Promise<IWord> {
+  const storageKey = `words_${organizationId}_${word}`;
 
-**Subtarefas Dia 1:**
+  // NÍVEL 1: Verificar cache local (AsyncStorage)
+  try {
+    const cached = await AsyncStorage.getItem(storageKey);
+    if (cached) {
+      const parsed = JSON.parse(cached);
+      if (parsed.definition && parsed.audio_url) {
+        return parsed; // ✅ Completo e offline
+      }
+    }
+  } catch (error) {
+    console.warn(`AsyncStorage read error for ${word}:`, error);
+  }
 
-- [x] Criar script `scripts/seed-1k-words.js` (Node.js puro, sem hardcoding)
-- [x] Função `fetchFromDictionaryAPI()` - Buscar word, definition, **examples**, part_of_speech, audio
-- [x] Implementar deduplicação (remover duplicatas)
-- [x] Migração: Adicionar `examples` (TEXT array), `part_of_speech` a `words_global`
-- [x] Desabilitar RLS temporariamente para seed
-- [x] Usar DictionaryAPI.dev para popular (não hardcoded)
-- [x] Usar Supabase upsert para inserir em batch
-- [x] Log: quantas palavras, duplicatas, exemplos salvos
-- [x] Executar: `npm run seed:1k:day1`
-- [x] Validar: 86 palavras com examples em Supabase
-- [x] Log detalhado: quantas palavras adicionadas, zero duplicatas
-- [x] Executar: `npm run seed:1k:day1`
-- [x] Validar no dashboard Supabase: 86 palavras inseridas em `words_global`
+  // NÍVEL 2: Verificar Supabase words_global
+  const { data: globalWord, error: supabaseError } = await supabase
+    .from("words_global")
+    .select("*")
+    .eq("word", word)
+    .single();
 
-**Status Dia 1:** ✅ 86 palavras com examples inseridas (8.6% do alvo de 1.000)
+  if (globalWord?.definition && globalWord?.audio_url) {
+    // ✅ Já enriquecido no banco, cachear localmente
+    await AsyncStorage.setItem(storageKey, JSON.stringify(globalWord));
+    return globalWord;
+  }
 
-**Próximos Passos (Dias 2-10):**
+  // NÍVEL 3: Buscar no DictionaryAPI
+  const apiData = await fetchFromDictionaryAPI(word);
 
-- [ ] Dia 2-10: Executar `npm run seed:1k:dayX` para atingir 10.000 palavras totais
-- [ ] Buscar lista de 1.000 palavras (English frequency wordlist)
-- [ ] Para cada palavra: Chamar DictionaryAPI.dev (NUNCA hardcoded)
-- [ ] Extrair: word, definition, examples[], part_of_speech, audio_url
-- [ ] Salvar tudo em Supabase (source of truth)
-- [ ] Implementar no Frontend (Dashboard):
-  - [ ] Query 20 palavras onde user_progress.score < 3
-  - [ ] Exibir 1 palavra por vez
-  - [ ] Botões "Acertei/Errei" → atualizar score
-  - [ ] Cache 20-palavra set em AsyncStorage (offline)
-  - [ ] Sincronizar com Supabase quando online
-  - [ ] Rotação automática para novo set quando all score >= 3
-- [ ] Habilitar RLS novamente após seed completo
-- [ ] Validação: Garantir zero duplicatas com constraint UNIQUE
+  // NÍVEL 4: Salvar no banco (UPDATE words_global)
+  const { data: updated } = await supabase
+    .from("words_global")
+    .update({
+      definition: apiData.definition,
+      audio_url: apiData.audio_url,
+      examples: apiData.examples,
+      part_of_speech: apiData.part_of_speech,
+      cefr_level: apiData.cefr_level,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("word", word)
+    .select()
+    .single();
+
+  // Cachear localmente
+  await AsyncStorage.setItem(storageKey, JSON.stringify(updated));
+
+  return updated;
+}
+```
+
+**Status:** 🟡 EM PROGRESSO
+
+- [x] Decisão arquitetural tomada
+- [ ] ExerciseSelector.tsx ajustada para nova abordagem
+- [ ] ExerciseScreen.tsx ajustada para nova abordagem
+- [ ] wordService.ts implementado com 4 níveis de cache
+- [ ] Seed script criado com arquivo externo
+
+**Subtarefas Task 1.5:**
+
+- [ ] **Preparar arquivo externo `seeds/words-list.json`**
+  - Array de strings: `["hello", "world", "suspicious", "book", ...]`
+  - Exemplo de formato:
+    ```json
+    {
+      "total": 5000,
+      "words": ["hello", "world", "people", "water", "house", ...]
+    }
+    ```
+  - Fonte recomendada: English frequency wordlist de domínio público
+  - Tamanho inicial: ~100-500 palavras para testes, depois expandir para 5000+
+
+- [ ] **Criar script `scripts/seed-words-initial.js`**
+  - Ler `seeds/words-list.json`
+  - Conectar ao Supabase com RLS desabilitada
+  - Verificar quais palavras já existem em words_global
+  - Inserir novas com apenas coluna 'word' preenchida (outros campos NULL)
+  - Usar UPSERT para evitar duplicatas
+  - Log: quantas palavras novas inseridas, quantas já existiam
+  - Comando: `npm run seed:init`
+
+- [ ] **Ajustar `wordService.ts` com nova estratégia lazy:**
+  - Implementar `getWordData(word, organizationId)` com 4 níveis
+  - Suporte a AsyncStorage com namespace por organization_id
+  - Verificar se dados completos (definition && audio_url) antes de chamar API
+  - Tratamento de erros: se API falha, usar dados parciais do banco
+  - Log: qual nível foi usado (cache/banco/api)
+
+- [ ] **Atualizar ExerciseSelector.tsx:**
+  - Query: `SELECT * FROM words_global WHERE id NOT IN (SELECT word_id FROM user_progress WHERE user_id = $1) ORDER BY RANDOM() LIMIT 20`
+  - Para cada palavra: chamar `getWordData(word, organizationId)`
+  - Exibir com spinner se status é "enriquecendo..."
+  - Tratar timeouts da API com mensagem amigável
+
+- [ ] **Testar fluxo completo:**
+  - [ ] Seed com 50+ palavras (apenas coluna word)
+  - [ ] Executar: `npm run seed:init`
+  - [ ] Validar no Supabase: 50+ palavras com definition = NULL
+  - [ ] Exercício carrega 20 aleatórias
+  - [ ] Primeira busca enriquece com API (pode ser lenta)
+  - [ ] Segunda busca usa cache local (instantâneo)
+  - [ ] Terceira busca usa banco (sem API)
+  - [ ] Próximo exercício carrega diferentes 20
+  - [ ] Validar: todas as 50 palavras foram vistas? Sim → completado
+
+- [ ] **Testar AsyncStorage offline:**
+  - [ ] Desabilitar internet (DevTools Network)
+  - [ ] Carregar exercício já iniciado
+  - [ ] Dados locais funcionam sem API
+  - [ ] Reconectar, sincronizar com sucesso
+  - [ ] Dados não duplicam (upsert correto)
+
+- [ ] **Habilitar RLS após testes completos**
+  - [ ] Criar policies: SELECT público, UPDATE/INSERT autenticado
+  - [ ] Testar com múltiplos usuários
+  - [ ] Validar isolamento por organization_id
 
 **Requisitos:**
 
-- Task 1.4 concluída
-- Acesso ao MCP Supabase
-- Acesso DictionaryAPI.dev (gratuito, sem auth)
-- AsyncStorage para cache local (React Native + Web)
+- Task 1.4 concluída ✅
+- Acesso ao MCP Supabase ✅
+- Acesso DictionaryAPI.dev (gratuito, sem auth) ✅
+- AsyncStorage para cache local (React Native + Web) ✅
+- Arquivo externo com lista de palavras (a preparar)
 
 **Prioridade:** 🔴 CRÍTICA
-**Tempo Dia 1:** ✅ 2 horas (concluído)
-**Tempo Dias 2-10:** ~1-2 horas por dia
+**Tempo Estimado:** ~3-4 horas (implementação + testes)
 **Custo:** Totalmente gratuito (DictionaryAPI.dev + Supabase free tier)
-**Status:** 🟡 EM PROGRESSO (86/10.000 palavras com examples)
+**Status:** 🟡 EM PROGRESSO (Estrutura pronta, implementação pendente)
 
 ---
 
@@ -959,41 +1095,52 @@ lighthouse http://localhost:8081 --view
 
 ## 📌 Notas Importantes
 
-### 🏗️ Decisão Arquitetural: Estratégia de Palavras Híbrida
+### 🏗️ Decisão Arquitetural: Estratégia de Palavras com Lazy Loading
 
-**Escolhido: ABORDAGEM HÍBRIDA**
+**Escolhido: CARREGAMENTO SOB DEMANDA COM SEED LEVE**
 
-O sistema usa **duas tabelas de palavras**:
+O sistema usa **seed inicial leve + enriquecimento progressivo**:
 
-1. **`words_global`** (SEM organization_id)
-   - Compartilhada entre TODAS as organizações
-   - Criada pela primeira org que pesquisa uma palavra
-   - Reutilizada por outras orgs (mais eficiente)
-   - Dados primários: palavra, definição, áudio_url
+1. **SEED INICIAL (Uma só vez)**
+   - Arquivo externo: `seeds/words-list.json`
+   - Apenas coluna `word` preenchida
+   - Todas as outras colunas: NULL
+   - Comando: `npm run seed:init`
 
-2. **`words`** (COM organization_id)
-   - Palavras customizadas por organização
-   - Traduções personalizadas por org
-   - Notas e exemplos adicionais
-   - FK para `words_global.id`
+2. **`words_global`** (Compartilhada entre todas as orgs)
+   - word: TEXT (UNIQUE) - Preenchido no seed
+   - definition: TEXT (null) - Preenchido sob demanda
+   - audio_url: TEXT (null) - Preenchido sob demanda
+   - examples: TEXT[] (null) - Preenchido sob demanda
+   - part_of_speech: TEXT (null) - Preenchido sob demanda
+   - cefr_level: TEXT (null) - Preenchido sob demanda
+
+3. **`words`** (COM organization_id - Personalizações)
+   - word_global_id: UUID (FK para words_global)
+   - organization_id: UUID (FK para organizations)
+   - translation: TEXT (customização)
+   - custom_definition: TEXT (override)
 
 **Fluxo de Busca:**
 
 ```
-fetchWord("hello") → Procura em:
-  1. Local cache (AsyncStorage)
-  2. words_global + words customizadas da org
-  3. API externa (se não encontrar)
-  4. Salva em words_global (1x) + words_org (customizações)
+getWordData("hello") → Procura em:
+  1. AsyncStorage local (namespace: words_{orgId}_{word}) → SEM API ✅
+  2. words_global completa (definition && audio_url) → Cachear localmente
+  3. DictionaryAPI.dev → UPDATE words_global → Cachear localmente
+  4. Próximas vezes: AsyncStorage instantâneo ou banco (SEM API)
 ```
 
 **Benefícios:**
 
-- ✅ Sem redundância de palavras globais
-- ✅ Isolamento de dados por org
-- ✅ Customizações por organização (tradução diferente)
-- ✅ Performance otimizada
-- ✅ Compatível com RLS e segurança
+- ✅ Seed rápido e leve (apenas strings)
+- ✅ Enriquecimento progressivo sob demanda
+- ✅ Zero redundância: palavra armazenada 1x globalmente
+- ✅ Isolamento: customizações por org em tabela separada
+- ✅ Performance: AsyncStorage muito rápido, API 1x por palavra
+- ✅ Offline-first: Funciona sem internet com cache local
+- ✅ Economia: Chamadas API reduzidas ao mínimo
+- ✅ Compatível com RLS e segurança multi-tenant
 
 ---
 
@@ -1042,6 +1189,16 @@ fetchWord("hello") → Procura em:
 ## 🎯 Próximas Ações
 
 1. ✅ Ler .ai_instructions.md e prd.md
-2. ⏳ **Task 0.1:** Configurar Supabase para o LexiCard
-3. ⏳ **Task 0.2:** Criar schema do banco de dados
-4. ⏳ **Task 1.1:** Inicializar Expo com TypeScript e NativeWind
+2. ✅ Task 0.1: Configurar Supabase para o LexiCard
+3. ✅ Task 0.2: Criar schema do banco de dados
+4. ✅ Task 1.1: Inicializar Expo com TypeScript e NativeWind
+5. ✅ Tasks 1.2-1.4: Supabase Client, Cache Híbrido, FlashCard (Concluídas)
+6. ✅ Tasks 2.1-2.6: Componentes e Exercício de 20 Palavras (Concluídas)
+7. ✅ Task 3.1-3.3: Dashboard, PWA, Autenticação (Concluídas)
+8. ⏳ **Task 1.5:** Implementar Seed com Carregamento Lazy
+   - Criar arquivo `seeds/words-list.json` com lista de palavras
+   - Implementar script `scripts/seed-words-initial.js`
+   - Ajustar `wordService.ts` com 4 níveis de cache
+   - Testar fluxo completo (seed → exercício → lazy load API)
+9. ⏳ Task 4.1-4.4: Docker, CI/CD, Performance (Próximas)
+10. ⏳ Task 5.1-5.3: Refinement, Testes, Deploy (Finais)

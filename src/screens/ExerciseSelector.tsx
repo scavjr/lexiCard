@@ -19,13 +19,15 @@ import {
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { supabase } from "@/services/supabase";
+import { wordService } from "@/services/wordService";
 
 interface Word {
   id: string;
   word: string;
-  definition: string;
-  audio_url?: string;
+  definition: string | null;
+  audio_url?: string | null;
   examples?: string[];
+  phonetic?: string | null;
 }
 
 interface ExerciseSelectorProps {
@@ -46,81 +48,101 @@ export const ExerciseSelector: React.FC<ExerciseSelectorProps> = ({
   const [error, setError] = useState<string | null>(null);
 
   /**
-   * Carregar 20 palavras com score < 3
-   * Prioridade:
-   * 1. Nunca vistas (score = 0)
-   * 2. Vistas 1-2x (score = 1-2)
-   * 3. Restantes até completar 20
+   * Carregar 20 palavras aleatórias que ainda não foram completadas
+   * Fluxo:
+   * 1. Buscar IDs de palavras já completadas (acertos >= 3)
+   * 2. Buscar 20 palavras aleatórias que NÃO estão na lista de completadas
+   * 3. Enriquecer palavras com dados da API se necessário
    */
   const loadWordsForExercise = async () => {
     try {
       setLoading(true);
       setError(null);
 
-      // Buscar IDs de palavras que o usuário já tem progresso
-      const { data: userProgress, error: progressError } = await supabase
+      console.log("🔍 [ExerciseSelector] Iniciando loadWordsForExercise");
+      console.log(`   userId: ${userId}, organizationId: ${organizationId}`);
+
+      // 1. Buscar palavras JÁ COMPLETADAS pelo usuário (acertos >= 3)
+      const { data: completedProgress, error: progressError } = await supabase
         .from("user_progress")
-        .select("word_id, acertos")
+        .select("word_id")
         .eq("user_id", userId)
         .eq("organization_id", organizationId)
-        .lt("acertos", 3); // Score < 3
+        .gte("acertos", 3); // Score >= 3 (completadas)
 
       if (progressError) throw progressError;
 
-      // Extrair IDs que já foram vistas
-      const viewedWordIds = new Set(userProgress?.map((p) => p.word_id) || []);
+      const completedWordIds = new Set(
+        completedProgress?.map((p) => p.word_id) || [],
+      );
+      console.log(
+        `✅ Palavras completadas (acertos >= 3): ${completedWordIds.size}`,
+      );
 
-      // Se menos de 20 palavras foram vistas, buscar mais do geral
-      if (viewedWordIds.size < 20) {
-        const { data: allWords, error: wordsError } = await supabase
-          .from("words_global")
-          .select("id, word, definition, audio_url, examples")
-          .limit(20);
+      // 2. Buscar MUITAS palavras (ex: 200) para depois filtrar
+      // Seleciona da tabela words_global e junta com words para pegar translation
+      const { data: availableWords, error: wordsError } = await supabase
+        .from("words_global")
+        .select("id, word, definition, audio_url, phonetic")
+        .order("word", { ascending: true }) // Ordem consistente
+        .limit(200); // Buscar bastante para garantir 20 após filtro
 
-        if (wordsError) throw wordsError;
+      if (wordsError) throw wordsError;
 
-        // Combinar: palavras já vistas + novas
-        const allWordIds = new Set([
-          ...viewedWordIds,
-          ...(allWords?.map((w) => w.id) || []),
-        ]);
-        const selectedIds = Array.from(allWordIds).slice(0, 20);
+      console.log(
+        `📚 Total de palavras buscadas (limit 200): ${availableWords?.length || 0}`,
+      );
 
-        // Buscar os dados completos dessas 20 palavras
-        const { data: selectedWords, error: selectError } = await supabase
-          .from("words_global")
-          .select("id, word, definition, audio_url, examples")
-          .in("id", selectedIds);
+      // 3. Filtrar palavras já completadas, depois limitar a 20
+      const selectedWords = (availableWords || [])
+        .filter((w) => !completedWordIds.has(w.id))
+        .slice(0, 20); // Pegar apenas 20 palavras não completadas
 
-        if (selectError) throw selectError;
+      console.log(
+        `🎯 Palavras após filtro (removendo completadas): ${selectedWords.length}`,
+      );
 
-        setWords(selectedWords || []);
+      if (selectedWords.length > 0) {
+        console.log(
+          "   Exemplos:",
+          selectedWords
+            .slice(0, 3)
+            .map((w) => w.word)
+            .join(", "),
+        );
+      }
+
+      if (selectedWords.length === 0) {
+        setError("Parabéns! Você completou todas as palavras!");
+        return;
+      }
+
+      // 4. ✅ NOVO: Enriquecer palavras com dados da API se necessário
+      console.log("🌐 Verificando se palavras precisam ser enriquecidas...");
+
+      // Contar quantas têm dados incompletos
+      const needEnrichment = selectedWords.filter(
+        (w) => !w.definition || !w.audio_url,
+      );
+
+      console.log(
+        `📊 Palavras que precisam enriquecimento: ${needEnrichment.length}/${selectedWords.length}`,
+      );
+
+      // Se tiver muitas que precisam, enriquecer
+      if (needEnrichment.length > 0) {
+        console.log("🔄 Iniciando enriquecimento de palavras da API...");
+        const enrichedWords = await wordService.enrichWords(selectedWords);
+
+        // Usar as palavras enriquecidas
+        setWords(enrichedWords as Word[]);
+        console.log("✅ Enriquecimento concluído!");
       } else {
-        // Se já tem 20+ palavras com baixo score, selecionar as 20 com menor score
-        const { data: topWords, error: topError } = await supabase
-          .from("user_progress")
-          .select("word_id, acertos")
-          .eq("user_id", userId)
-          .eq("organization_id", organizationId)
-          .lt("acertos", 3)
-          .order("acertos", { ascending: true })
-          .limit(20);
-
-        if (topError) throw topError;
-
-        const topWordIds = topWords?.map((p) => p.word_id) || [];
-
-        const { data: selectedWords, error: selectError } = await supabase
-          .from("words_global")
-          .select("id, word, definition, audio_url, examples")
-          .in("id", topWordIds);
-
-        if (selectError) throw selectError;
-
-        setWords(selectedWords || []);
+        setWords(selectedWords as Word[]);
+        console.log("✅ Todas as palavras já têm dados completos");
       }
     } catch (err) {
-      console.error("Erro ao carregar palavras:", err);
+      console.error("❌ [ExerciseSelector] Erro ao carregar palavras:", err);
       setError(
         err instanceof Error ? err.message : "Erro ao carregar exercício",
       );
@@ -161,6 +183,51 @@ export const ExerciseSelector: React.FC<ExerciseSelectorProps> = ({
           style={styles.errorContainer}
         >
           <Text style={styles.errorTitle}>❌ Erro</Text>
+          <Text style={styles.errorText}>{error}</Text>
+          <TouchableOpacity
+            style={styles.retryButton}
+            onPress={loadWordsForExercise}
+          >
+            <Text style={styles.retryButtonText}>Tentar Novamente</Text>
+          </TouchableOpacity>
+        </LinearGradient>
+      </SafeAreaView>
+    );
+  }
+
+  // Sem palavras disponíveis
+  if (words.length === 0) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <LinearGradient
+          colors={["#10B981", "#34D399"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.successContainer}
+        >
+          <Text style={styles.successTitle}>🎉 Parabéns!</Text>
+          <Text style={styles.successText}>
+            Você completou todas as palavras!
+          </Text>
+          <TouchableOpacity style={styles.backButton} onPress={onCancel}>
+            <Text style={styles.backButtonText}>← Voltar</Text>
+          </TouchableOpacity>
+        </LinearGradient>
+      </SafeAreaView>
+    );
+  }
+
+  // Estado de erro
+  if (error) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <LinearGradient
+          colors={["#EF4444", "#F87171"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.errorContainer}
+        >
+          <Text style={styles.errorTitle}>⚠️ Erro</Text>
           <Text style={styles.errorText}>{error}</Text>
           <TouchableOpacity
             style={styles.retryButton}

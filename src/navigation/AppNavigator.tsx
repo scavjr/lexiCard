@@ -1,8 +1,3 @@
-/**
- * AppNavigator - Navegação entre telas (Exercício, Dashboard, etc)
- * Com tabs na base para alternar entre telas
- */
-
 import React, { useState } from "react";
 import {
   View,
@@ -11,6 +6,7 @@ import {
   Text,
   SafeAreaView,
 } from "react-native";
+import { HomeScreen } from "@/screens/HomeScreen";
 import { ExerciseSelector } from "@/screens/ExerciseSelector";
 import { ExerciseScreen } from "@/screens/ExerciseScreen";
 import DashboardScreen from "@/screens/DashboardScreen";
@@ -19,9 +15,10 @@ import { useAuth } from "@/store/AuthContext";
 interface Word {
   id: string;
   word: string;
-  definition: string;
-  audio_url?: string;
+  definition: string | null;
+  audio_url?: string | null;
   examples?: string[];
+  translation?: string;
 }
 
 interface ExerciseStats {
@@ -31,7 +28,7 @@ interface ExerciseStats {
   duration: number;
 }
 
-type Screen = "home" | "dashboard" | "exercise-selector" | "exercise";
+type Screen = "home" | "exercise-selector" | "exercise" | "dashboard";
 
 interface AppNavigatorProps {
   userId: string;
@@ -44,9 +41,6 @@ export const AppNavigator: React.FC<AppNavigatorProps> = ({
 }) => {
   const [currentScreen, setCurrentScreen] = useState<Screen>("home");
   const [selectedWords, setSelectedWords] = useState<Word[]>([]);
-  const [exerciseStats, setExerciseStats] = useState<ExerciseStats | null>(
-    null,
-  );
   const { logout } = useAuth();
 
   const handleLogout = async () => {
@@ -58,8 +52,7 @@ export const AppNavigator: React.FC<AppNavigatorProps> = ({
     setCurrentScreen("exercise");
   };
 
-  const handleExerciseComplete = (stats: ExerciseStats) => {
-    setExerciseStats(stats);
+  const handleExerciseComplete = (_stats: ExerciseStats) => {
     setCurrentScreen("home");
   };
 
@@ -68,11 +61,20 @@ export const AppNavigator: React.FC<AppNavigatorProps> = ({
       {/* Conteúdo */}
       <View style={styles.content}>
         {currentScreen === "home" && (
+          <HomeScreen
+            userId={userId}
+            organizationId={organizationId}
+            onStartExercise={() => setCurrentScreen("exercise-selector")}
+            onDashboard={() => setCurrentScreen("dashboard")}
+            onLogout={handleLogout}
+          />
+        )}
+        {currentScreen === "exercise-selector" && (
           <ExerciseSelector
             userId={userId}
             organizationId={organizationId}
             onStartExercise={handleStartExercise}
-            onCancel={() => setCurrentScreen("dashboard")}
+            onCancel={() => setCurrentScreen("home")}
           />
         )}
         {currentScreen === "exercise" && selectedWords.length > 0 && (
@@ -91,7 +93,7 @@ export const AppNavigator: React.FC<AppNavigatorProps> = ({
 
       {/* Bottom Navigation */}
       <View style={styles.tabBar}>
-        {/* Exercício Tab */}
+        {/* Home Tab */}
         <TouchableOpacity
           style={[styles.tab, currentScreen === "home" && styles.tabActive]}
           onPress={() => setCurrentScreen("home")}
@@ -100,6 +102,24 @@ export const AppNavigator: React.FC<AppNavigatorProps> = ({
             style={[
               styles.tabLabel,
               currentScreen === "home" && styles.tabLabelActive,
+            ]}
+          >
+            🏠 Início
+          </Text>
+        </TouchableOpacity>
+
+        {/* ExerciseSelector Tab (apenas quando em seleção) */}
+        <TouchableOpacity
+          style={[
+            styles.tab,
+            currentScreen === "exercise-selector" && styles.tabActive,
+          ]}
+          onPress={() => setCurrentScreen("exercise-selector")}
+        >
+          <Text
+            style={[
+              styles.tabLabel,
+              currentScreen === "exercise-selector" && styles.tabLabelActive,
             ]}
           >
             📚 Exercício
@@ -122,11 +142,6 @@ export const AppNavigator: React.FC<AppNavigatorProps> = ({
           >
             📊 Progresso
           </Text>
-        </TouchableOpacity>
-
-        {/* Logout Tab */}
-        <TouchableOpacity style={styles.tab} onPress={handleLogout}>
-          <Text style={styles.tabLabel}>🚪 Sair</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
