@@ -27,6 +27,7 @@ interface Word {
   definition: string | null;
   audio_url?: string | null;
   examples?: string[];
+  translation?: string;
   phonetic?: string | null;
 }
 
@@ -117,30 +118,84 @@ export const ExerciseSelector: React.FC<ExerciseSelectorProps> = ({
         return;
       }
 
+      // 3.5 Buscar traduções na tabela words_global (não em words!)
+      const wordGlobalIds = selectedWords.map((w) => w.id);
+      console.log(
+        `📍 Buscando traduções para ${wordGlobalIds.length} palavras em words_global...`,
+      );
+
+      const { data: translations, error: translationError } = await supabase
+        .from("words_global")
+        .select("id, translation")
+        .in("id", wordGlobalIds);
+
+      if (translationError) {
+        console.warn("❌ Erro ao buscar traduções", translationError);
+      }
+
+      console.log(`✅ Traduções encontradas: ${translations?.length || 0}`);
+      if (translations && translations.length > 0) {
+        console.log("   Exemplos:", translations.slice(0, 3));
+      }
+
+      // Merge traduções com palavras
+      const translationMap = new Map(
+        (translations || []).map((t) => [t.id, t.translation]),
+      );
+
+      const selectedWordsWithTranslation = selectedWords.map((w) => ({
+        ...w,
+        translation: translationMap.get(w.id) || w.word, // Fallback: mesma palavra
+      }));
+
+      // Debug: Mostrar primeiras 3 com tradução
+      console.log("📋 Palavras após merge com tradução:");
+      selectedWordsWithTranslation.slice(0, 3).forEach((w, i) => {
+        console.log(`   [${i}] ${w.word} → ${w.translation}`);
+      });
+
       // 4. ✅ NOVO: Enriquecer palavras com dados da API se necessário
       console.log("🌐 Verificando se palavras precisam ser enriquecidas...");
 
       // Contar quantas têm dados incompletos
-      const needEnrichment = selectedWords.filter(
+      const needEnrichment = selectedWordsWithTranslation.filter(
         (w) => !w.definition || !w.audio_url,
       );
 
       console.log(
-        `📊 Palavras que precisam enriquecimento: ${needEnrichment.length}/${selectedWords.length}`,
+        `📊 Palavras que precisam enriquecimento: ${needEnrichment.length}/${selectedWordsWithTranslation.length}`,
       );
 
       // Se tiver muitas que precisam, enriquecer
+      let finalWords: Word[];
       if (needEnrichment.length > 0) {
         console.log("🔄 Iniciando enriquecimento de palavras da API...");
-        const enrichedWords = await wordService.enrichWords(selectedWords);
+        const enrichedWords = await wordService.enrichWords(
+          selectedWordsWithTranslation,
+        );
 
-        // Usar as palavras enriquecidas
-        setWords(enrichedWords as Word[]);
+        // Manter traduções do enriquecimento
+        finalWords = enrichedWords.map((w) => ({
+          ...w,
+          translation: translationMap.get(w.id) || w.translation || w.word,
+        })) as Word[];
         console.log("✅ Enriquecimento concluído!");
       } else {
-        setWords(selectedWords as Word[]);
+        finalWords = selectedWordsWithTranslation as Word[];
         console.log("✅ Todas as palavras já têm dados completos");
       }
+
+      // Debug: log primeira palavra
+      console.log("🔍 Primeiras 5 palavras do exercício:");
+      finalWords.slice(0, 5).forEach((w, i) => {
+        console.log(`   [${i}] ${w.word} (ID: ${w.id}) → ${w.translation}`);
+      });
+
+      // ✅ Ir direto para o exercício (FlashCard) sem mostrar lista
+      console.log(
+        "🚀 Iniciando exercício com " + finalWords.length + " palavras",
+      );
+      onStartExercise(finalWords);
     } catch (err) {
       console.error("❌ [ExerciseSelector] Erro ao carregar palavras:", err);
       setError(

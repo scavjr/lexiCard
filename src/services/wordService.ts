@@ -698,6 +698,8 @@ class WordService {
           definition: definition || word.definition,
           audio_url: audioUrl || word.audio_url,
           examples: examples.length > 0 ? examples : word.examples || [],
+          translation: word.translation, // Manter tradução original
+          phonetic: phonetic || word.phonetic, // Adicionar fonética se nova
         };
 
         if (definition || audioUrl || phonetic) {

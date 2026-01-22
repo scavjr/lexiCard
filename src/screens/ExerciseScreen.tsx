@@ -62,6 +62,17 @@ export const ExerciseScreen: React.FC<ExerciseScreenProps> = ({
   const currentWord = words[currentIndex];
   const progress = ((currentIndex + 1) / words.length) * 100;
 
+  // Debug
+  React.useEffect(() => {
+    if (currentWord) {
+      console.log("📱 [ExerciseScreen] Palavra atual:", {
+        word: currentWord.word,
+        translation: currentWord.translation,
+        id: currentWord.id,
+      });
+    }
+  }, [currentIndex, currentWord]);
+
   /**
    * Salvar progresso da palavra
    */

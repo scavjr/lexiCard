@@ -3,6 +3,7 @@ import { useState } from "react";
 import { ActivityIndicator, View } from "react-native";
 import { AuthProvider, useAuth } from "./src/store/AuthContext";
 import AppNavigator from "./src/navigation/AppNavigator";
+import { LandingPage } from "./src/screens/LandingPage";
 import LoginScreen from "./src/screens/LoginScreen";
 import SignUpScreen from "./src/screens/SignUpScreen";
 
@@ -13,6 +14,7 @@ function AppContent() {
   const { isLoading, isAuthenticated, userId, organizationId, login } =
     useAuth();
   const [showSignUp, setShowSignUp] = useState(false);
+  const [showLanding, setShowLanding] = useState(true);
 
   // Tela de carregamento enquanto restaura sessão
   if (isLoading) {
@@ -23,32 +25,47 @@ function AppContent() {
     );
   }
 
-  // Se não autenticado, mostrar telas de auth
-  if (!isAuthenticated) {
-    return showSignUp ? (
-      <SignUpScreen
-        onSignUpSuccess={(newUserId, newOrgId) => {
-          login(newUserId, newOrgId);
-        }}
-        onNavigateToLogin={() => setShowSignUp(false)}
-      />
-    ) : (
-      <LoginScreen
-        onLoginSuccess={(newUserId, newOrgId) => {
-          login(newUserId, newOrgId);
-        }}
-        onNavigateToSignUp={() => setShowSignUp(true)}
-      />
+  // Se autenticado, mostrar o app com navegação
+  if (isAuthenticated) {
+    return (
+      <>
+        <AppNavigator
+          userId={userId || ""}
+          organizationId={organizationId || ""}
+        />
+        <StatusBar style="auto" />
+      </>
     );
   }
 
-  // Se autenticado, mostrar o app com navegação
+  // Se não autenticado, mostrar fluxo: Landing → Login/SignUp
+  if (showLanding) {
+    return (
+      <>
+        <LandingPage onNavigateToLogin={() => setShowLanding(false)} />
+        <StatusBar style="auto" />
+      </>
+    );
+  }
+
+  // Telas de autenticação
   return (
     <>
-      <AppNavigator
-        userId={userId || ""}
-        organizationId={organizationId || ""}
-      />
+      {showSignUp ? (
+        <SignUpScreen
+          onSignUpSuccess={(newUserId, newOrgId) => {
+            login(newUserId, newOrgId);
+          }}
+          onNavigateToLogin={() => setShowSignUp(false)}
+        />
+      ) : (
+        <LoginScreen
+          onLoginSuccess={(newUserId, newOrgId) => {
+            login(newUserId, newOrgId);
+          }}
+          onNavigateToSignUp={() => setShowSignUp(true)}
+        />
+      )}
       <StatusBar style="auto" />
     </>
   );
