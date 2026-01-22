@@ -1,5 +1,5 @@
 /**
- * AppNavigator - Navegação entre telas (FlashCard e Dashboard)
+ * AppNavigator - Navegação entre telas (Exercício, Dashboard, etc)
  * Com tabs na base para alternar entre telas
  */
 
@@ -11,9 +11,27 @@ import {
   Text,
   SafeAreaView,
 } from "react-native";
-import { FlashCardDemo } from "@/components/FlashCard.demo";
+import { ExerciseSelector } from "@/screens/ExerciseSelector";
+import { ExerciseScreen } from "@/screens/ExerciseScreen";
 import DashboardScreen from "@/screens/DashboardScreen";
 import { useAuth } from "@/store/AuthContext";
+
+interface Word {
+  id: string;
+  word: string;
+  definition: string;
+  audio_url?: string;
+  examples?: string[];
+}
+
+interface ExerciseStats {
+  totalWords: number;
+  correctAnswers: number;
+  incorrectAnswers: number;
+  duration: number;
+}
+
+type Screen = "home" | "dashboard" | "exercise-selector" | "exercise";
 
 interface AppNavigatorProps {
   userId: string;
@@ -24,50 +42,82 @@ export const AppNavigator: React.FC<AppNavigatorProps> = ({
   userId,
   organizationId,
 }) => {
-  const [currentTab, setCurrentTab] = useState<"home" | "dashboard">("home");
+  const [currentScreen, setCurrentScreen] = useState<Screen>("home");
+  const [selectedWords, setSelectedWords] = useState<Word[]>([]);
+  const [exerciseStats, setExerciseStats] = useState<ExerciseStats | null>(
+    null,
+  );
   const { logout } = useAuth();
 
   const handleLogout = async () => {
     await logout();
   };
 
+  const handleStartExercise = (words: Word[]) => {
+    setSelectedWords(words);
+    setCurrentScreen("exercise");
+  };
+
+  const handleExerciseComplete = (stats: ExerciseStats) => {
+    setExerciseStats(stats);
+    setCurrentScreen("home");
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       {/* Conteúdo */}
       <View style={styles.content}>
-        {currentTab === "home" ? (
-          <FlashCardDemo userId={userId} organizationId={organizationId} />
-        ) : (
+        {currentScreen === "home" && (
+          <ExerciseSelector
+            userId={userId}
+            organizationId={organizationId}
+            onStartExercise={handleStartExercise}
+            onCancel={() => setCurrentScreen("dashboard")}
+          />
+        )}
+        {currentScreen === "exercise" && selectedWords.length > 0 && (
+          <ExerciseScreen
+            userId={userId}
+            organizationId={organizationId}
+            words={selectedWords}
+            onComplete={handleExerciseComplete}
+            onCancel={() => setCurrentScreen("home")}
+          />
+        )}
+        {currentScreen === "dashboard" && (
           <DashboardScreen userId={userId} organizationId={organizationId} />
         )}
       </View>
 
       {/* Bottom Navigation */}
       <View style={styles.tabBar}>
-        {/* Home Tab */}
+        {/* Exercício Tab */}
         <TouchableOpacity
-          style={[styles.tab, currentTab === "home" && styles.tabActive]}
-          onPress={() => setCurrentTab("home")}
+          style={[styles.tab, currentScreen === "home" && styles.tabActive]}
+          onPress={() => setCurrentScreen("home")}
         >
           <Text
             style={[
               styles.tabLabel,
-              currentTab === "home" && styles.tabLabelActive,
+              currentScreen === "home" && styles.tabLabelActive,
             ]}
           >
-            🏠 Aprende
+            📚 Exercício
           </Text>
         </TouchableOpacity>
 
         {/* Dashboard Tab */}
         <TouchableOpacity
-          style={[styles.tab, currentTab === "dashboard" && styles.tabActive]}
-          onPress={() => setCurrentTab("dashboard")}
+          style={[
+            styles.tab,
+            currentScreen === "dashboard" && styles.tabActive,
+          ]}
+          onPress={() => setCurrentScreen("dashboard")}
         >
           <Text
             style={[
               styles.tabLabel,
-              currentTab === "dashboard" && styles.tabLabelActive,
+              currentScreen === "dashboard" && styles.tabLabelActive,
             ]}
           >
             📊 Progresso

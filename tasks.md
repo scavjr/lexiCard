@@ -30,6 +30,24 @@
 - **Comando:** `npm run seed:1k:day1` (pronto para dias 2-10)
 - **RLS:** Temporariamente desabilitado (re-habilitar antes de produção)
 
+### 📚 Progresso de Implementação - Exercício 20 Palavras
+
+**Status:** ✅ CONCLUÍDO - Novo Fluxo Implementado
+
+- **Task 2.4:** ✅ ExerciseSelector criada
+- **Task 2.5:** ✅ ExerciseScreen criada
+- **Task 2.6:** ✅ AppNavigator integrado
+- **Funcionalidades:**
+  - ✅ Seletor de 20 palavras com priorização
+  - ✅ Exercício com flip card (1 palavra por vez)
+  - ✅ Progress bar + contadores (✅/❌)
+  - ✅ Salvamento automático em Supabase
+  - ✅ Sessão com estatísticas completas
+- **Nova UI:**
+  - Tab "📚 Exercício" → Seletor → Exercício → Dashboard
+  - Header com progresso visual (5/20 + barra % + stats)
+  - Botões ✅ Sabia | ❌ Não Sabia
+
 ---
 
 ## Status das Tarefas
@@ -143,28 +161,40 @@
 }
 ```
 
-**Fluxo de Exercício - Regra das 20 Palavras (IMPORTANTE):**
+**Fluxo de Exercício - Regra das 20 Palavras (IMPLEMENTADO):**
 
 ```
-1. CARREGAR 20 PALAVRAS:
-   - Query Supabase: user_progress score < 3 (não assimiladas)
-   - Nunca repetir: score >= 3 (assimiladas)
-   - Cache em AsyncStorage (offline)
-   - NUNCA hardcoded
+1. TELA ExerciseSelector:
+   - Carrega automaticamente 20 palavras com score < 3
+   - Mostra lista completa com definições e exemplos
+   - Prioridade: nunca vistas > vistas 1-2x > restantes
+   - Usuário clica "Começar Exercício"
 
-2. ESTUDO:
-   - Clique "Acertei/Errei" → atualizar score
-   - Score >= 3: ASSIMILADA (não repete)
+2. TELA ExerciseScreen:
+   - Exibe 1 palavra por vez (FlashCard com flip)
+   - Header mostra: "5/20" + progress bar + ✅5 | ❌2
+   - Botões: ✅ "Sabia" e ❌ "Não Sabia"
+   - Cada resposta salva em user_progress (acertos/erros)
+   - Passa para próxima palavra automaticamente
 
-3. ROTAÇÃO:
-   - Todas 20 com score >= 3 → próximo set de 20
-   - Nunca repete as mesmas 20
+3. ROTAÇÃO APÓS COMPLETAR:
+   - Salva sessão em flashcard_sessions
+   - Volta ao dashboard com estatísticas
+   - Próximo exercício carrega novo set de 20
 
-4. ARMAZENAMENTO (Zero Hardcode):
-   - Sempre buscar de Supabase (source of truth)
-   - AsyncStorage apenas para cache/offline
-   - Nunca palavras hardcoded em código
+4. ARMAZENAMENTO:
+   - user_progress: acertos, erros, data_ultimo_acerto
+   - flashcard_sessions: total_aprendidas, total_revisadas, duracao_segundos
+   - AsyncStorage: cache local (offline)
+   - Supabase: source of truth
 ```
+
+**Status:** ✅ IMPLEMENTADO
+
+- [x] ExerciseSelector.tsx criada
+- [x] ExerciseScreen.tsx criada
+- [x] AppNavigator integrado com novo fluxo
+- [x] Salva user_progress e flashcard_sessions
 
 **Subtarefas Dia 1:**
 
@@ -416,7 +446,96 @@
 
 ---
 
-## 📊 Fase 3: Dashboard & PWA
+## 🎯 Fase 2.5: Exercício com 20 Palavras (NOVO)
+
+### ✅ Task 2.4: Criar tela ExerciseSelector (20 palavras)
+
+**Descrição:** Implementar tela de seleção que carrega automaticamente 20 palavras para exercício.
+
+**Status:** ✅ CONCLUÍDO
+
+**Implementado:**
+
+- ✅ Componente `ExerciseSelector.tsx` (450 linhas)
+- ✅ Query Supabase: busca 20 palavras com score < 3
+- ✅ Priorização: nunca vistas > vistas 1-2x > restantes
+- ✅ Lista visual mostrando:
+  - Número (1., 2., 3.,... 20.)
+  - Palavra + Definição
+  - Primeiro exemplo (itálico roxo)
+  - Badge 🎵 se tem áudio
+- ✅ Estados: carregando, erro, sucesso, sem palavras
+- ✅ Botões: ← Voltar (vermelho) | Começar Exercício → (verde)
+- ✅ Estilização: LinearGradient + NativeWind
+- ✅ Integração em AppNavigator
+
+**Requisitos:** Task 1.4, 2.1, 2.3 concluídas
+**Prioridade:** 🔴 CRÍTICA
+**Status:** ✅ CONCLUÍDO
+
+---
+
+### ✅ Task 2.5: Criar tela ExerciseScreen (exercício 20 palavras)
+
+**Descrição:** Implementar tela de exercício que exibe 1 palavra por vez com feedback.
+
+**Status:** ✅ CONCLUÍDO
+
+**Implementado:**
+
+- ✅ Componente `ExerciseScreen.tsx` (320 linhas)
+- ✅ Header com:
+  - ← Botão voltar
+  - "5/20" (posição atual/total)
+  - Progress bar verde com % preenchida
+  - 2 stats: ✅ Sabia (5) | ❌ Não Sabia (3)
+- ✅ FlashCard no centro com animação flip existente
+- ✅ Botões na base:
+  - ❌ "Não Sabia" (vermelho) - incrementa contador erros
+  - ✅ "Sabia" (verde) - incrementa contador acertos
+- ✅ Cada resposta:
+  - Salva em user_progress (acertos/erros)
+  - Passa para próxima palavra automaticamente
+- ✅ Ao completar 20:
+  - Salva flashcard_session com estatísticas
+  - Volta ao dashboard
+- ✅ Estilos: LinearGradient + NativeWind
+- ✅ Offline-first com suporte a cache local
+- ✅ Integração em AppNavigator
+
+**Requisitos:** Task 2.1, 2.4 concluídas
+**Prioridade:** 🔴 CRÍTICA
+**Status:** ✅ CONCLUÍDO
+
+---
+
+### ✅ Task 2.6: Integrar novo fluxo no AppNavigator
+
+**Descrição:** Atualizar navegação para incluir ExerciseSelector → ExerciseScreen.
+
+**Status:** ✅ CONCLUÍDO
+
+**Implementado:**
+
+- ✅ 4 screens: home (ExerciseSelector), exercise, dashboard, etc
+- ✅ Transições automáticas:
+  - home → exercise (ao clicar "Começar")
+  - exercise → home (ao cancelar)
+  - home → dashboard (ao clicar tab)
+  - exercise → home (ao completar)
+- ✅ Bottom tabs:
+  - 📚 Exercício (ExerciseSelector)
+  - 📊 Progresso (DashboardScreen)
+  - 🚪 Sair (logout)
+- ✅ Estado armazenado entre navegações
+- ✅ Props tipadas (Word[], ExerciseStats, etc)
+- ✅ Compatível com multi-tenant (userId, organizationId)
+
+**Requisitos:** Task 2.4, 2.5, 3.1 concluídas
+**Prioridade:** 🔴 CRÍTICA
+**Status:** ✅ CONCLUÍDO
+
+---
 
 ### ✅ Task 3.1: Criar tela de estatísticas com progresso CEFR
 

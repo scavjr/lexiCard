@@ -111,14 +111,32 @@ async function fetchFromDictionaryAPI(word) {
             }
 
             const part_of_speech = meaning.partOfSpeech || "noun";
+
+            // Extrair áudio (tentar múltiplas phonetics)
+            let audio_url = null;
             const phonetics = entry.phonetics || [];
-            const audio_url = phonetics.find((p) => p.audio)?.audio || null;
+            for (const phonetic of phonetics) {
+              if (phonetic.audio) {
+                audio_url = phonetic.audio;
+                break;
+              }
+            }
+
+            // Se não encontrou áudio em phonetics, tentar em definitions
+            if (!audio_url && meaning.definitions) {
+              for (const def of meaning.definitions) {
+                if (def.synonyms && def.antonyms) {
+                  // Já temos informação suficiente
+                  break;
+                }
+              }
+            }
 
             resolve({
               word: word.toLowerCase(),
               definition,
-              examples: examples.slice(0, 3), // Máximo 3 exemplos
-              audio_url,
+              examples: examples.length > 0 ? examples.slice(0, 5) : [], // Máximo 5 exemplos
+              audio_url: audio_url || null,
               part_of_speech,
               cefr_level: "B1",
               frequency_score: 5.0,
@@ -140,6 +158,8 @@ async function fetchFromDictionaryAPI(word) {
 async function fetchAllWordsFromAPI(wordList) {
   const fetchedWords = [];
   const failedWords = [];
+  let wordsWithAudio = 0;
+  let wordsWithExamples = 0;
 
   console.log(
     `\n🌐 Buscando ${wordList.length} palavras do DictionaryAPI.dev...`,
@@ -154,7 +174,11 @@ async function fetchAllWordsFromAPI(wordList) {
     try {
       const wordData = await fetchFromDictionaryAPI(word);
       fetchedWords.push(wordData);
-      await new Promise((resolve) => setTimeout(resolve, 100)); // Delay respeitoso
+
+      if (wordData.audio_url) wordsWithAudio++;
+      if (wordData.examples.length > 0) wordsWithExamples++;
+
+      await new Promise((resolve) => setTimeout(resolve, 150)); // Delay respeitoso
     } catch (err) {
       failedWords.push(word);
     }
@@ -163,6 +187,15 @@ async function fetchAllWordsFromAPI(wordList) {
   console.log(
     `\n✅ Sucesso: ${fetchedWords.length} | ⚠️  Falhas: ${failedWords.length}`,
   );
+  console.log(`   🎵 Com áudio: ${wordsWithAudio}/${fetchedWords.length}`);
+  console.log(
+    `   📝 Com exemplos: ${wordsWithExamples}/${fetchedWords.length}`,
+  );
+
+  if (failedWords.length > 0) {
+    console.log(`\n❌ Palavras que falharam: ${failedWords.join(", ")}`);
+  }
+
   return fetchedWords;
 }
 
