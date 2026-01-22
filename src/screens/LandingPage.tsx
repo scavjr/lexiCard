@@ -30,7 +30,8 @@ interface LandingPageProps {
 export const LandingPage: React.FC<LandingPageProps> = ({
   onNavigateToLogin,
 }) => {
-  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+  const [deferredPrompt, setDeferredPrompt] =
+    useState<BeforeInstallPromptEvent | null>(null);
   const [showInstallButton, setShowInstallButton] = useState(false);
 
   useEffect(() => {
@@ -51,7 +52,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({
     window.addEventListener("appinstalled", handleAppInstalled);
 
     return () => {
-      window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+      window.removeEventListener(
+        "beforeinstallprompt",
+        handleBeforeInstallPrompt,
+      );
       window.removeEventListener("appinstalled", handleAppInstalled);
     };
   }, []);
@@ -169,7 +173,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               style={[styles.primaryButton, styles.installButton]}
               onPress={handleInstallClick}
             >
-              <Text style={styles.primaryButtonText}>📥 Instalar Aplicativo</Text>
+              <Text style={styles.primaryButtonText}>
+                📥 Instalar Aplicativo
+              </Text>
             </TouchableOpacity>
           )}
 
