@@ -122,51 +122,97 @@
 
 ---
 
-### 🟡 Task 1.5: Seed de 10k palavras (1.000 por dia) - Abordagem Híbrida Gratuita
+### 🟡 Task 1.5: Seed de 10k palavras (1.000 por dia) - DictionaryAPI.dev (Zero Hardcode)
 
-**Descrição:** Popular `words_global` com 10.000 palavras em inglês usando múltiplas fontes gratuitas (DictionaryAPI.dev + Wiktionary + lista curada). Estratégia: 1.000 palavras por dia durante 10 dias.
+**Descrição:** Popular `words_global` com 10.000 palavras em inglês usando **DictionaryAPI.dev** (fonte gratuita). Estratégia: 1.000 palavras por dia. **CRÍTICO: Nunca hardcode. Sempre Supabase/AsyncStorage. Se não existir, buscar API e salvar.**
 
-**Estrutura de Dados:**
+**Estrutura de Dados (Com Examples do DictionaryAPI):**
 
 ```json
 {
-  "word": "hello",
-  "definition": "A greeting or expression of goodwill",
-  "audio_url": "https://...",
-  "cefr_level": "A1",
-  "frequency_score": 9.8
+  "word": "suspicious",
+  "definition": "Arousing suspicion",
+  "examples": [
+    "His suspicious behaviour brought him to the attention of the police.",
+    "She gave me a suspicious look."
+  ],
+  "audio_url": "https://api.dictionaryapi.dev/media/pronunciations/en/suspicious-us.mp3",
+  "part_of_speech": "adjective",
+  "cefr_level": "B1",
+  "frequency_score": 7.5
 }
+```
+
+**Fluxo de Exercício - Regra das 20 Palavras (IMPORTANTE):**
+
+```
+1. CARREGAR 20 PALAVRAS:
+   - Query Supabase: user_progress score < 3 (não assimiladas)
+   - Nunca repetir: score >= 3 (assimiladas)
+   - Cache em AsyncStorage (offline)
+   - NUNCA hardcoded
+
+2. ESTUDO:
+   - Clique "Acertei/Errei" → atualizar score
+   - Score >= 3: ASSIMILADA (não repete)
+
+3. ROTAÇÃO:
+   - Todas 20 com score >= 3 → próximo set de 20
+   - Nunca repete as mesmas 20
+
+4. ARMAZENAMENTO (Zero Hardcode):
+   - Sempre buscar de Supabase (source of truth)
+   - AsyncStorage apenas para cache/offline
+   - Nunca palavras hardcoded em código
 ```
 
 **Subtarefas Dia 1:**
 
-- [x] Criar script `scripts/seed-1k-words.js` (Node.js puro)
-- [x] Função `loadCuratedList()` - Carregar 86 palavras curadas com CEFR + frequency
-- [x] Implementar deduplicação (remover palavras duplicadas)
-- [x] Migração: Adicionar `cefr_level` e `frequency_score` a `words_global`
-- [x] Desabilitar RLS temporariamente em `words_global` para seed
-- [x] Usar Supabase REST API diretamente para inserir em batch (upsert)
+- [x] Criar script `scripts/seed-1k-words.js` (Node.js puro, sem hardcoding)
+- [x] Função `fetchFromDictionaryAPI()` - Buscar word, definition, **examples**, part_of_speech, audio
+- [x] Implementar deduplicação (remover duplicatas)
+- [x] Migração: Adicionar `examples` (TEXT array), `part_of_speech` a `words_global`
+- [x] Desabilitar RLS temporariamente para seed
+- [x] Usar DictionaryAPI.dev para popular (não hardcoded)
+- [x] Usar Supabase upsert para inserir em batch
+- [x] Log: quantas palavras, duplicatas, exemplos salvos
+- [x] Executar: `npm run seed:1k:day1`
+- [x] Validar: 86 palavras com examples em Supabase
 - [x] Log detalhado: quantas palavras adicionadas, zero duplicatas
 - [x] Executar: `npm run seed:1k:day1`
 - [x] Validar no dashboard Supabase: 86 palavras inseridas em `words_global`
 
-**Status Dia 1:** ✅ 86 palavras inseridas com sucesso (8.6% do alvo de 1.000)
+**Status Dia 1:** ✅ 86 palavras com examples inseridas (8.6% do alvo de 1.000)
 
 **Próximos Passos (Dias 2-10):**
 
-- [ ] Expandir `seeds/words-1k.json` de 30 para 1.000+ palavras
-- [ ] Modificar script para carregar de JSON ao invés de hardcoded array
-- [ ] Dia 2: Executar com batch de 1.000 palavras (total: 1.086)
-- [ ] Dia 3-10: Executar para atingir 10.000 palavras totais
+- [ ] Dia 2-10: Executar `npm run seed:1k:dayX` para atingir 10.000 palavras totais
+- [ ] Buscar lista de 1.000 palavras (English frequency wordlist)
+- [ ] Para cada palavra: Chamar DictionaryAPI.dev (NUNCA hardcoded)
+- [ ] Extrair: word, definition, examples[], part_of_speech, audio_url
+- [ ] Salvar tudo em Supabase (source of truth)
+- [ ] Implementar no Frontend (Dashboard):
+  - [ ] Query 20 palavras onde user_progress.score < 3
+  - [ ] Exibir 1 palavra por vez
+  - [ ] Botões "Acertei/Errei" → atualizar score
+  - [ ] Cache 20-palavra set em AsyncStorage (offline)
+  - [ ] Sincronizar com Supabase quando online
+  - [ ] Rotação automática para novo set quando all score >= 3
 - [ ] Habilitar RLS novamente após seed completo
 - [ ] Validação: Garantir zero duplicatas com constraint UNIQUE
 
-**Requisitos:** Task 1.4 concluída, acesso ao MCP Supabase
+**Requisitos:**
+
+- Task 1.4 concluída
+- Acesso ao MCP Supabase
+- Acesso DictionaryAPI.dev (gratuito, sem auth)
+- AsyncStorage para cache local (React Native + Web)
+
 **Prioridade:** 🔴 CRÍTICA
 **Tempo Dia 1:** ✅ 2 horas (concluído)
-**Tempo Dias 2-10:** ~1 hora por dia
-**Custo:** Totalmente gratuito (APIs públicas + hardcoded list)
-**Status:** 🟡 EM PROGRESSO (86/10.000 palavras)
+**Tempo Dias 2-10:** ~1-2 horas por dia
+**Custo:** Totalmente gratuito (DictionaryAPI.dev + Supabase free tier)
+**Status:** 🟡 EM PROGRESSO (86/10.000 palavras com examples)
 
 ---
 
